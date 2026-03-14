@@ -355,6 +355,7 @@ function BasicExample() {
           }}
           styles={{
             rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
           }}
         />
       </div>
@@ -406,6 +407,7 @@ function PaginationExample() {
           }}
           styles={{
             rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
           }}
         />
       </div>
@@ -651,6 +653,7 @@ function LoadingExample() {
           }}
           styles={{
             rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
           }}
         />
       </div>
@@ -723,6 +726,7 @@ function InfiniteScrollExample() {
           }}
           styles={{
             rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
           }}
         />
       </div>
@@ -765,6 +769,7 @@ function VirtualizationExample() {
           }}
           styles={{
             rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
           }}
         />
       </div>
@@ -815,6 +820,7 @@ function StylingExample() {
           }}
           styles={{
             rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
           }}
         />
       </div>
@@ -868,6 +874,10 @@ function EmptyStateExample() {
           classNames={{
             header: "text-xs font-medium text-muted-foreground",
             cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
           }}
         />
       </div>
@@ -1000,6 +1010,7 @@ function ServerSideExample() {
           }}
           styles={{
             rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
           }}
         />
       </div>
