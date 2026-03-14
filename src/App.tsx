@@ -1205,9 +1205,12 @@ export default function App() {
         <Separator className="mb-12" />
 
         <Tabs defaultValue="examples" className="space-y-8">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-md grid-cols-3">
             <TabsTrigger value="examples">Examples</TabsTrigger>
+            
             <TabsTrigger value="usage">Quick Start</TabsTrigger>
+            <TabsTrigger value="docs">Docs</TabsTrigger>
+            
           </TabsList>
 
           <TabsContent value="examples" className="space-y-16">
@@ -1372,6 +1375,842 @@ const columns = [
     pinnedBg: 'rgba(238, 242, 255, 0.95)',
   }}
 />`}</CodeBlock>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="docs" className="space-y-12 max-w-4xl">
+            {/* ── Core Concepts ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Core Concepts</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                BoltTable is built around three ideas: <strong>virtualization</strong> (only visible rows exist in the DOM), <strong>dual-mode operations</strong> (client-side or server-side — your choice), and <strong>zero-config styling</strong> (inline styles by default, no CSS imports needed).
+              </p>
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <p className="text-sm font-medium">The dual-mode rule</p>
+                <p className="text-xs text-muted-foreground">
+                  Every interactive feature (sorting, filtering, pagination) works in two modes. <strong>Omit the callback</strong> and BoltTable handles it locally. <strong>Provide the callback</strong> and BoltTable delegates to you.
+                </p>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="text-left px-4 py-2 font-medium">Feature</th>
+                      <th className="text-left px-4 py-2 font-medium">Client-side (local)</th>
+                      <th className="text-left px-4 py-2 font-medium">Server-side (delegated)</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    <tr><td className="px-4 py-2">Sorting</td><td className="px-4 py-2 text-muted-foreground">Omit <code className="text-xs bg-muted px-1 rounded">onSortChange</code></td><td className="px-4 py-2 text-muted-foreground">Provide <code className="text-xs bg-muted px-1 rounded">onSortChange</code></td></tr>
+                    <tr><td className="px-4 py-2">Filtering</td><td className="px-4 py-2 text-muted-foreground">Omit <code className="text-xs bg-muted px-1 rounded">onFilterChange</code></td><td className="px-4 py-2 text-muted-foreground">Provide <code className="text-xs bg-muted px-1 rounded">onFilterChange</code></td></tr>
+                    <tr><td className="px-4 py-2">Pagination</td><td className="px-4 py-2 text-muted-foreground">Pass all data + <code className="text-xs bg-muted px-1 rounded">pageSize</code></td><td className="px-4 py-2 text-muted-foreground">Pass page data + <code className="text-xs bg-muted px-1 rounded">current, total</code> + <code className="text-xs bg-muted px-1 rounded">onPaginationChange</code></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Column Definitions ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Column Definitions</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Columns are the backbone of BoltTable. Each column is a <code className="text-xs bg-muted px-1 rounded">ColumnType&lt;T&gt;</code> object with required and optional fields.
+              </p>
+
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Required Fields</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border rounded-lg overflow-hidden">
+                    <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Field</th><th className="text-left px-4 py-2 font-medium">Type</th><th className="text-left px-4 py-2 font-medium">Description</th></tr></thead>
+                    <tbody className="divide-y">
+                      <tr><td className="px-4 py-2 font-mono text-xs">key</td><td className="px-4 py-2 text-muted-foreground text-xs">string</td><td className="px-4 py-2 text-muted-foreground">Unique identifier for drag, pin, hide, sort</td></tr>
+                      <tr><td className="px-4 py-2 font-mono text-xs">dataIndex</td><td className="px-4 py-2 text-muted-foreground text-xs">string</td><td className="px-4 py-2 text-muted-foreground">Property name on the row object to read</td></tr>
+                      <tr><td className="px-4 py-2 font-mono text-xs">title</td><td className="px-4 py-2 text-muted-foreground text-xs">string | ReactNode</td><td className="px-4 py-2 text-muted-foreground">Header label — plain text or React element</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Layout Fields</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border rounded-lg overflow-hidden">
+                    <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Field</th><th className="text-left px-4 py-2 font-medium">Type</th><th className="text-left px-4 py-2 font-medium">Default</th><th className="text-left px-4 py-2 font-medium">Description</th></tr></thead>
+                    <tbody className="divide-y">
+                      <tr><td className="px-4 py-2 font-mono text-xs">width</td><td className="px-4 py-2 text-muted-foreground text-xs">number</td><td className="px-4 py-2 text-muted-foreground text-xs">150</td><td className="px-4 py-2 text-muted-foreground">Width in pixels. Last column always stretches.</td></tr>
+                      <tr><td className="px-4 py-2 font-mono text-xs">hidden</td><td className="px-4 py-2 text-muted-foreground text-xs">boolean</td><td className="px-4 py-2 text-muted-foreground text-xs">false</td><td className="px-4 py-2 text-muted-foreground">Controlled visibility</td></tr>
+                      <tr><td className="px-4 py-2 font-mono text-xs">pinned</td><td className="px-4 py-2 text-muted-foreground text-xs">'left' | 'right' | false</td><td className="px-4 py-2 text-muted-foreground text-xs">false</td><td className="px-4 py-2 text-muted-foreground">Controlled pin state</td></tr>
+                      <tr><td className="px-4 py-2 font-mono text-xs">className</td><td className="px-4 py-2 text-muted-foreground text-xs">string</td><td className="px-4 py-2 text-muted-foreground text-xs">—</td><td className="px-4 py-2 text-muted-foreground">CSS class for all cells in this column</td></tr>
+                      <tr><td className="px-4 py-2 font-mono text-xs">style</td><td className="px-4 py-2 text-muted-foreground text-xs">CSSProperties</td><td className="px-4 py-2 text-muted-foreground text-xs">—</td><td className="px-4 py-2 text-muted-foreground">Inline styles for all cells</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Behavior Fields</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border rounded-lg overflow-hidden">
+                    <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Field</th><th className="text-left px-4 py-2 font-medium">Type</th><th className="text-left px-4 py-2 font-medium">Default</th><th className="text-left px-4 py-2 font-medium">Description</th></tr></thead>
+                    <tbody className="divide-y">
+                      <tr><td className="px-4 py-2 font-mono text-xs">sortable</td><td className="px-4 py-2 text-muted-foreground text-xs">boolean</td><td className="px-4 py-2 text-muted-foreground text-xs">true</td><td className="px-4 py-2 text-muted-foreground">Show sort controls</td></tr>
+                      <tr><td className="px-4 py-2 font-mono text-xs">sorter</td><td className="px-4 py-2 text-muted-foreground text-xs">boolean | (a, b) =&gt; number</td><td className="px-4 py-2 text-muted-foreground text-xs">—</td><td className="px-4 py-2 text-muted-foreground"><code className="text-xs bg-muted px-1 rounded">true</code> for default, or custom comparator</td></tr>
+                      <tr><td className="px-4 py-2 font-mono text-xs">filterable</td><td className="px-4 py-2 text-muted-foreground text-xs">boolean</td><td className="px-4 py-2 text-muted-foreground text-xs">true</td><td className="px-4 py-2 text-muted-foreground">Show filter in context menu</td></tr>
+                      <tr><td className="px-4 py-2 font-mono text-xs">filterFn</td><td className="px-4 py-2 text-muted-foreground text-xs">(val, record, dataIndex) =&gt; boolean</td><td className="px-4 py-2 text-muted-foreground text-xs">—</td><td className="px-4 py-2 text-muted-foreground">Custom filter predicate</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-lg font-semibold">Rendering Fields</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm border rounded-lg overflow-hidden">
+                    <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Field</th><th className="text-left px-4 py-2 font-medium">Type</th><th className="text-left px-4 py-2 font-medium">Description</th></tr></thead>
+                    <tbody className="divide-y">
+                      <tr><td className="px-4 py-2 font-mono text-xs">render</td><td className="px-4 py-2 text-muted-foreground text-xs">(value, record, index) =&gt; ReactNode</td><td className="px-4 py-2 text-muted-foreground">Custom cell renderer. Omit to render raw value.</td></tr>
+                      <tr><td className="px-4 py-2 font-mono text-xs">shimmerRender</td><td className="px-4 py-2 text-muted-foreground text-xs">() =&gt; ReactNode</td><td className="px-4 py-2 text-muted-foreground">Custom loading skeleton for this column</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <CodeBlock>{`// Fully configured column example
+const nameColumn: ColumnType<User> = {
+  key: 'name',
+  dataIndex: 'name',
+  title: 'Full Name',
+  width: 220,
+  pinned: 'left',
+  sortable: true,
+  sorter: (a, b) => a.name.localeCompare(b.name),
+  filterable: true,
+  filterFn: (val, record) =>
+    record.name.toLowerCase().includes(val.toLowerCase()),
+  render: (value, record) => (
+    <div>
+      <strong>{record.name}</strong>
+      <span style={{ color: '#888' }}>{record.email}</span>
+    </div>
+  ),
+};`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Data & Row Keys ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Data & Row Keys</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Pass an array of objects to <code className="text-xs bg-muted px-1 rounded">data</code>. Each object is one row. For client-side operations, pass the full dataset. For server-side, pass only the current page.
+              </p>
+              <CodeBlock>{`// rowKey as a string — reads record[rowKey]
+<BoltTable rowKey="id" data={users} columns={columns} />
+
+// rowKey as a function — compute the key yourself
+<BoltTable rowKey={(record) => \`\${record.type}-\${record.id}\`} />
+
+// Default is "id" when omitted
+<BoltTable data={users} columns={columns} />`}</CodeBlock>
+              <div className="rounded-lg border bg-amber-50 dark:bg-amber-950/30 p-4 space-y-2">
+                <p className="text-sm font-medium text-amber-800 dark:text-amber-300">TypeScript: the DataRecord constraint</p>
+                <p className="text-xs text-amber-700 dark:text-amber-400">
+                  BoltTable requires <code className="text-xs bg-amber-100 dark:bg-amber-900/50 px-1 rounded">T extends DataRecord</code> where <code className="text-xs bg-amber-100 dark:bg-amber-900/50 px-1 rounded">DataRecord = Record&lt;string, unknown&gt;</code>. If you use <code className="text-xs bg-amber-100 dark:bg-amber-900/50 px-1 rounded">interface</code>, add <code className="text-xs bg-amber-100 dark:bg-amber-900/50 px-1 rounded">[key: string]: unknown</code> as the first line. <code className="text-xs bg-amber-100 dark:bg-amber-900/50 px-1 rounded">type</code> aliases work without this.
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Sorting ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Sorting</h2>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Client-side (default)</h3>
+                  <p className="text-xs text-muted-foreground">Omit <code className="text-xs bg-muted px-1 rounded">onSortChange</code>. BoltTable sorts in memory.</p>
+                  <CodeBlock>{`{
+  key: 'age',
+  dataIndex: 'age',
+  title: 'Age',
+  sortable: true,
+  // true = default comparator
+  // function = custom logic
+  sorter: (a, b) => a.age - b.age,
+}`}</CodeBlock>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Server-side</h3>
+                  <p className="text-xs text-muted-foreground">Provide <code className="text-xs bg-muted px-1 rounded">onSortChange</code>. BoltTable delegates to you.</p>
+                  <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={serverData}
+  onSortChange={(key, dir) => {
+    // dir: 'asc' | 'desc' | null
+    setSortKey(key);
+    setSortDir(dir);
+    refetch({ sort: key, order: dir });
+  }}
+/>`}</CodeBlock>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                <strong>Sort cycle:</strong> click a column header or use the context menu to cycle through <code className="text-xs bg-muted px-1 rounded">null → asc → desc → null</code>. Only one column is sorted at a time.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* ── Filtering ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Filtering</h2>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Client-side (default)</h3>
+                  <p className="text-xs text-muted-foreground">Omit <code className="text-xs bg-muted px-1 rounded">onFilterChange</code>. Users filter via right-click context menu.</p>
+                  <CodeBlock>{`{
+  key: 'status',
+  dataIndex: 'status',
+  filterable: true,
+  // Custom: exact match
+  filterFn: (val, record) =>
+    record.status === val.toLowerCase(),
+}
+// No filterFn → case-insensitive
+// substring match (default)`}</CodeBlock>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Server-side</h3>
+                  <p className="text-xs text-muted-foreground">Provide <code className="text-xs bg-muted px-1 rounded">onFilterChange</code>. Receives a filters map.</p>
+                  <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={serverData}
+  onFilterChange={(filters) => {
+    // { status: "active", region: "us" }
+    // column removed when cleared
+    setFilters(filters);
+    refetch({ filters });
+  }}
+/>`}</CodeBlock>
+                </div>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <p className="text-sm font-medium mb-2">How users filter</p>
+                <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                  <li>Right-click a column header</li>
+                  <li>Click "Filter Column" in the context menu</li>
+                  <li>Type a value and press Enter</li>
+                  <li>A filter icon appears in the header when active</li>
+                  <li>Right-click again → "Clear Filter" to remove</li>
+                </ol>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Pagination ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Pagination</h2>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Client-side</h3>
+                  <p className="text-xs text-muted-foreground">Pass all data. BoltTable slices it per page.</p>
+                  <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={allUsers}  // all 500 users
+  pagination={{ pageSize: 20 }}
+/>`}</CodeBlock>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Server-side</h3>
+                  <p className="text-xs text-muted-foreground">Pass current page only. Set <code className="text-xs bg-muted px-1 rounded">total</code> for page count.</p>
+                  <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={pageData}       // current page
+  pagination={{
+    current: page,
+    pageSize: 20,
+    total: 500,         // for page numbers
+    showTotal: (t, [a, b]) =>
+      \`\${a}–\${b} of \${t}\`,
+  }}
+  onPaginationChange={(p, s) => {
+    setPage(p);
+    setPageSize(s);
+  }}
+/>`}</CodeBlock>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Field</th><th className="text-left px-4 py-2 font-medium">Type</th><th className="text-left px-4 py-2 font-medium">Default</th><th className="text-left px-4 py-2 font-medium">Description</th></tr></thead>
+                  <tbody className="divide-y">
+                    <tr><td className="px-4 py-2 font-mono text-xs">current</td><td className="px-4 py-2 text-muted-foreground text-xs">number</td><td className="px-4 py-2 text-muted-foreground text-xs">1</td><td className="px-4 py-2 text-muted-foreground">Active page (1-based)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">pageSize</td><td className="px-4 py-2 text-muted-foreground text-xs">number</td><td className="px-4 py-2 text-muted-foreground text-xs">10</td><td className="px-4 py-2 text-muted-foreground">Rows per page</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">total</td><td className="px-4 py-2 text-muted-foreground text-xs">number</td><td className="px-4 py-2 text-muted-foreground text-xs">data.length</td><td className="px-4 py-2 text-muted-foreground">Total rows (required for server-side)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">showTotal</td><td className="px-4 py-2 text-muted-foreground text-xs">(total, [from, to]) =&gt; ReactNode</td><td className="px-4 py-2 text-muted-foreground text-xs">—</td><td className="px-4 py-2 text-muted-foreground">Custom "showing X of Y" label</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Set <code className="text-xs bg-muted px-1 rounded">pagination={"{false}"}</code> to disable pagination entirely. All rows render in a single virtualized viewport.
+              </p>
+            </div>
+
+            <Separator />
+
+            {/* ── Row Selection ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Row Selection</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Prepends a checkbox or radio column. BoltTable does not manage selection state — you track <code className="text-xs bg-muted px-1 rounded">selectedRowKeys</code> yourself.
+              </p>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Checkbox (multi-select)</h3>
+                  <CodeBlock>{`const [keys, setKeys] = useState([]);
+
+<BoltTable
+  rowSelection={{
+    type: 'checkbox',
+    selectedRowKeys: keys,
+    onChange: (keys) => setKeys(keys),
+    getCheckboxProps: (record) => ({
+      disabled: record.locked,
+    }),
+  }}
+/>`}</CodeBlock>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Radio (single-select)</h3>
+                  <CodeBlock>{`const [keys, setKeys] = useState([]);
+
+<BoltTable
+  rowSelection={{
+    type: 'radio',
+    selectedRowKeys: keys,
+    onChange: (keys) => setKeys(keys),
+  }}
+/>`}</CodeBlock>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Field</th><th className="text-left px-4 py-2 font-medium">Type</th><th className="text-left px-4 py-2 font-medium">Description</th></tr></thead>
+                  <tbody className="divide-y">
+                    <tr><td className="px-4 py-2 font-mono text-xs">type</td><td className="px-4 py-2 text-muted-foreground text-xs">'checkbox' | 'radio'</td><td className="px-4 py-2 text-muted-foreground">Selection control type (default: checkbox)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">selectedRowKeys</td><td className="px-4 py-2 text-muted-foreground text-xs">React.Key[]</td><td className="px-4 py-2 text-muted-foreground">Currently selected keys (required)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">onChange</td><td className="px-4 py-2 text-muted-foreground text-xs">(keys, rows, info) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">Primary selection change callback</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">onSelect</td><td className="px-4 py-2 text-muted-foreground text-xs">(record, selected, rows, event) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">Single row toggle callback</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">onSelectAll</td><td className="px-4 py-2 text-muted-foreground text-xs">(selected, selectedRows, changeRows) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">Header checkbox toggle callback</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">getCheckboxProps</td><td className="px-4 py-2 text-muted-foreground text-xs">(record) =&gt; {"{ disabled? }"}</td><td className="px-4 py-2 text-muted-foreground">Disable specific rows</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">hideSelectAll</td><td className="px-4 py-2 text-muted-foreground text-xs">boolean</td><td className="px-4 py-2 text-muted-foreground">Hide the header select-all checkbox</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Expandable Rows ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Expandable Rows</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Expandable rows reveal a content panel below each row. Supports both uncontrolled (BoltTable manages state) and controlled (you manage state) modes. Content height is auto-measured via <code className="text-xs bg-muted px-1 rounded">ResizeObserver</code>.
+              </p>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Uncontrolled</h3>
+                  <CodeBlock>{`<BoltTable
+  expandable={{
+    rowExpandable: (r) => r.hasDetails,
+    expandedRowRender: (record) => (
+      <DetailPanel record={record} />
+    ),
+  }}
+  expandedRowHeight={200}
+  maxExpandedRowHeight={400}
+/>`}</CodeBlock>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Controlled</h3>
+                  <CodeBlock>{`const [expanded, setExpanded] = useState([]);
+
+<BoltTable
+  expandable={{
+    expandedRowKeys: expanded,
+    onExpandedRowsChange: setExpanded,
+    expandedRowRender: (record) => (
+      <DetailPanel record={record} />
+    ),
+  }}
+/>`}</CodeBlock>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Field</th><th className="text-left px-4 py-2 font-medium">Type</th><th className="text-left px-4 py-2 font-medium">Description</th></tr></thead>
+                  <tbody className="divide-y">
+                    <tr><td className="px-4 py-2 font-mono text-xs">expandedRowRender</td><td className="px-4 py-2 text-muted-foreground text-xs">(record, index, indent, expanded) =&gt; ReactNode</td><td className="px-4 py-2 text-muted-foreground">Renders expanded content (required)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">rowExpandable</td><td className="px-4 py-2 text-muted-foreground text-xs">(record) =&gt; boolean</td><td className="px-4 py-2 text-muted-foreground">Which rows show the expand toggle</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">expandedRowKeys</td><td className="px-4 py-2 text-muted-foreground text-xs">React.Key[]</td><td className="px-4 py-2 text-muted-foreground">Controlled expanded keys</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">defaultExpandedRowKeys</td><td className="px-4 py-2 text-muted-foreground text-xs">React.Key[]</td><td className="px-4 py-2 text-muted-foreground">Initially expanded (uncontrolled)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">defaultExpandAllRows</td><td className="px-4 py-2 text-muted-foreground text-xs">boolean</td><td className="px-4 py-2 text-muted-foreground">Expand all on mount</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">onExpandedRowsChange</td><td className="px-4 py-2 text-muted-foreground text-xs">(keys) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">Expansion state changed</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Column Interactions ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Column Interactions</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Four column interactions are enabled by default. All fire optional callbacks so you can persist changes.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Drag to Reorder</h3>
+                  <p className="text-xs text-muted-foreground">Drag column headers to reorder. Custom zero-dependency drag implementation — no @dnd-kit needed. Pinned columns cannot be dragged.</p>
+                  <CodeBlock>{`onColumnOrderChange={(order) =>
+  saveOrder(order) // string[]
+}`}</CodeBlock>
+                </div>
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Resize</h3>
+                  <p className="text-xs text-muted-foreground">Drag the right edge of any header. A colored overlay line and width label follow the cursor.</p>
+                  <CodeBlock>{`onColumnResize={(key, width) =>
+  saveWidth(key, width) // number
+}`}</CodeBlock>
+                </div>
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Pin</h3>
+                  <p className="text-xs text-muted-foreground">Set <code className="text-xs bg-muted px-1 rounded">pinned: 'left'</code> in column defs, or users right-click → "Pin to Left/Right".</p>
+                  <CodeBlock>{`onColumnPin={(key, pinned) =>
+  // 'left' | 'right' | false
+  savePinState(key, pinned)
+}`}</CodeBlock>
+                </div>
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Hide</h3>
+                  <p className="text-xs text-muted-foreground">Users right-click → "Hide Column". Pinned columns cannot be hidden.</p>
+                  <CodeBlock>{`onColumnHide={(key, hidden) =>
+  // true = just hidden
+  saveVisibility(key, hidden)
+}`}</CodeBlock>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Loading States ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Loading States</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">State</th><th className="text-left px-4 py-2 font-medium">Headers</th><th className="text-left px-4 py-2 font-medium">Body</th></tr></thead>
+                  <tbody className="divide-y">
+                    <tr><td className="px-4 py-2 text-xs"><code className="bg-muted px-1 rounded">isLoading=true</code>, data empty</td><td className="px-4 py-2 text-muted-foreground text-xs">Real headers</td><td className="px-4 py-2 text-muted-foreground text-xs">Shimmer skeleton rows</td></tr>
+                    <tr><td className="px-4 py-2 text-xs"><code className="bg-muted px-1 rounded">isLoading=true</code>, data present</td><td className="px-4 py-2 text-muted-foreground text-xs">Real headers</td><td className="px-4 py-2 text-muted-foreground text-xs">Real rows + shimmer at bottom</td></tr>
+                    <tr><td className="px-4 py-2 text-xs"><code className="bg-muted px-1 rounded">layoutLoading=true</code></td><td className="px-4 py-2 text-muted-foreground text-xs">Shimmer headers</td><td className="px-4 py-2 text-muted-foreground text-xs">Shimmer rows</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <CodeBlock>{`// Initial load
+<BoltTable columns={columns} data={data} isLoading={isFetching} />
+
+// Full skeleton (headers unknown)
+<BoltTable columns={columns} data={[]} layoutLoading={!ready} />
+
+// Custom shimmer per column
+{
+  key: 'avatar',
+  shimmerRender: () => (
+    <div style={{ width: 36, height: 36, borderRadius: '50%', background: '#eee' }} />
+  ),
+}`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Infinite Scroll ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Infinite Scroll</h2>
+              <CodeBlock>{`const [data, setData] = useState([]);
+const [loading, setLoading] = useState(false);
+
+const loadMore = async () => {
+  if (loading) return;
+  setLoading(true);
+  const rows = await fetchNextPage(data.length);
+  setData(prev => [...prev, ...rows]);
+  setLoading(false);
+};
+
+<BoltTable
+  columns={columns}
+  data={data}
+  isLoading={loading}
+  onEndReached={loadMore}
+  onEndReachedThreshold={8}  // trigger 8 rows from bottom
+  pagination={false}          // required
+  autoHeight={false}          // required — needs fixed viewport
+/>`}</CodeBlock>
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <p className="text-sm font-medium">Key points</p>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Built-in debounce guard prevents repeated firing. Resets when <code className="text-xs bg-muted px-1 rounded">data.length</code> changes or <code className="text-xs bg-muted px-1 rounded">isLoading</code> flips to false.</li>
+                  <li>Set <code className="text-xs bg-muted px-1 rounded">pagination={"{false}"}</code> — pagination and infinite scroll are mutually exclusive.</li>
+                  <li>Set <code className="text-xs bg-muted px-1 rounded">autoHeight={"{false}"}</code> and wrap in a fixed-height container.</li>
+                </ul>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Styling & Theming ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Styling & Theming</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Three layers of customization, from broad to granular.
+              </p>
+
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold">Layer 1: accentColor</h3>
+                  <p className="text-xs text-muted-foreground">A single color string that themes all interactive elements — sort icons, filter icons, resize line, selected rows, expand chevrons, checkboxes, pagination highlight.</p>
+                  <CodeBlock>{`<BoltTable accentColor="#6366f1" />  // default: #1890ff`}</CodeBlock>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold">Layer 2: classNames</h3>
+                  <p className="text-xs text-muted-foreground">CSS class overrides per table region. Appended to (not replacing) defaults.</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border rounded-lg overflow-hidden">
+                      <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Key</th><th className="text-left px-4 py-2 font-medium">Applies to</th></tr></thead>
+                      <tbody className="divide-y">
+                        <tr><td className="px-4 py-2 font-mono text-xs">header</td><td className="px-4 py-2 text-muted-foreground">All non-pinned header cells</td></tr>
+                        <tr><td className="px-4 py-2 font-mono text-xs">cell</td><td className="px-4 py-2 text-muted-foreground">All body cells</td></tr>
+                        <tr><td className="px-4 py-2 font-mono text-xs">row</td><td className="px-4 py-2 text-muted-foreground">Each row wrapper</td></tr>
+                        <tr><td className="px-4 py-2 font-mono text-xs">pinnedHeader</td><td className="px-4 py-2 text-muted-foreground">Pinned headers (in addition to header)</td></tr>
+                        <tr><td className="px-4 py-2 font-mono text-xs">pinnedCell</td><td className="px-4 py-2 text-muted-foreground">Pinned body cells (in addition to cell)</td></tr>
+                        <tr><td className="px-4 py-2 font-mono text-xs">dragHeader</td><td className="px-4 py-2 text-muted-foreground">Ghost column while dragging</td></tr>
+                        <tr><td className="px-4 py-2 font-mono text-xs">expandedRow</td><td className="px-4 py-2 text-muted-foreground">Expanded content panel</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold">Layer 3: styles</h3>
+                  <p className="text-xs text-muted-foreground">Inline CSS overrides with highest specificity.</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border rounded-lg overflow-hidden">
+                      <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Key</th><th className="text-left px-4 py-2 font-medium">Type</th><th className="text-left px-4 py-2 font-medium">Description</th></tr></thead>
+                      <tbody className="divide-y">
+                        <tr><td className="px-4 py-2 font-mono text-xs">header</td><td className="px-4 py-2 text-muted-foreground text-xs">CSSProperties</td><td className="px-4 py-2 text-muted-foreground">Header cells</td></tr>
+                        <tr><td className="px-4 py-2 font-mono text-xs">cell</td><td className="px-4 py-2 text-muted-foreground text-xs">CSSProperties</td><td className="px-4 py-2 text-muted-foreground">Body cells</td></tr>
+                        <tr><td className="px-4 py-2 font-mono text-xs">pinnedBg</td><td className="px-4 py-2 text-muted-foreground text-xs">string</td><td className="px-4 py-2 text-muted-foreground">CSS color for pinned backgrounds</td></tr>
+                        <tr><td className="px-4 py-2 font-mono text-xs">rowHover</td><td className="px-4 py-2 text-muted-foreground text-xs">CSSProperties</td><td className="px-4 py-2 text-muted-foreground">Hovered row background</td></tr>
+                        <tr><td className="px-4 py-2 font-mono text-xs">rowSelected</td><td className="px-4 py-2 text-muted-foreground text-xs">CSSProperties</td><td className="px-4 py-2 text-muted-foreground">Selected row background</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Context Menu ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Context Menu</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Right-clicking any column header opens a context menu with built-in actions: Sort Asc/Desc, Filter Column, Pin Left/Right, Hide Column. Add your own items below the defaults.
+              </p>
+              <CodeBlock>{`const customItems: ColumnContextMenuItem[] = [
+  {
+    key: 'copy',
+    label: 'Copy Column Data',
+    icon: <CopyIcon className="h-3 w-3" />,
+    onClick: (columnKey) => {
+      const values = data.map(r => r[columnKey]);
+      navigator.clipboard.writeText(values.join('\\n'));
+    },
+  },
+  {
+    key: 'delete',
+    label: 'Remove Column',
+    danger: true,     // renders in red
+    disabled: false,  // can be dynamic
+    onClick: (columnKey) => removeColumn(columnKey),
+  },
+];
+
+<BoltTable columnContextMenuItems={customItems} />`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Auto Height ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Auto Height vs Fixed Height</h2>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">autoHeight=true (default)</h3>
+                  <p className="text-xs text-muted-foreground">Table auto-sizes to content, capped at 10 rows. Fewer rows = smaller table.</p>
+                  <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={data}
+  autoHeight={true}
+/>`}</CodeBlock>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">autoHeight=false</h3>
+                  <p className="text-xs text-muted-foreground">Table fills parent container. Parent must provide a height. Required for infinite scroll.</p>
+                  <CodeBlock>{`<div style={{ height: 600 }}>
+  <BoltTable
+    columns={columns}
+    data={data}
+    autoHeight={false}
+  />
+</div>`}</CodeBlock>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Custom Icons ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Custom Icons</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Every built-in icon can be replaced via the <code className="text-xs bg-muted px-1 rounded">icons</code> prop. All default icons are inline SVGs at 12×12px.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Key</th><th className="text-left px-4 py-2 font-medium">Used In</th></tr></thead>
+                  <tbody className="divide-y">
+                    <tr><td className="px-4 py-2 font-mono text-xs">gripVertical</td><td className="px-4 py-2 text-muted-foreground">Column header drag handle</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">sortAsc / sortDesc</td><td className="px-4 py-2 text-muted-foreground">Sort indicators in header</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">filter / filterClear</td><td className="px-4 py-2 text-muted-foreground">Filter indicator + clear button</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">pin / pinOff</td><td className="px-4 py-2 text-muted-foreground">Pin/unpin in context menu + header</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">eyeOff</td><td className="px-4 py-2 text-muted-foreground">Hide column in context menu</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">chevronDown</td><td className="px-4 py-2 text-muted-foreground">Expand toggle / page size dropdown</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">chevronLeft / chevronRight</td><td className="px-4 py-2 text-muted-foreground">Pagination prev/next</td></tr>
+                    <tr><td className="px-4 py-2 font-mono text-xs">chevronsLeft / chevronsRight</td><td className="px-4 py-2 text-muted-foreground">Pagination first/last</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <CodeBlock>{`import { GripVertical, ArrowUpAZ, ArrowDownAZ } from 'lucide-react';
+
+<BoltTable
+  icons={{
+    gripVertical: <GripVertical size={12} />,
+    sortAsc: <ArrowUpAZ size={12} />,
+    sortDesc: <ArrowDownAZ size={12} />,
+  }}
+  hideGripIcon={false}  // set true to hide drag handle
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── TypeScript ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">TypeScript</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                BoltTable is fully typed. The generic parameter <code className="text-xs bg-muted px-1 rounded">T</code> flows through column <code className="text-xs bg-muted px-1 rounded">render</code>, <code className="text-xs bg-muted px-1 rounded">sorter</code>, <code className="text-xs bg-muted px-1 rounded">filterFn</code>, and selection callbacks.
+              </p>
+              <CodeBlock>{`import { BoltTable, ColumnType, SortDirection } from 'bolt-table';
+import type {
+  DataRecord,            // Record<string, unknown>
+  ColumnContextMenuItem, // Custom context menu item
+  ExpandableConfig,      // Expandable rows config
+  PaginationType,        // Pagination config
+  RowSelectionConfig,    // Row selection config
+  BoltTableIcons,        // Icon override map
+} from 'bolt-table';
+
+// interface — needs index signature
+interface Product {
+  [key: string]: unknown;
+  id: string;
+  name: string;
+  price: number;
+}
+
+// type — works without it
+type Product = {
+  id: string;
+  name: string;
+  price: number;
+};
+
+<BoltTable<Product> columns={columns} data={products} />`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Performance ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Performance</h2>
+              <div className="space-y-4">
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Memoize columns and data</h3>
+                  <p className="text-xs text-muted-foreground">BoltTable watches columns via a content fingerprint. Memoize to avoid unnecessary re-renders.</p>
+                  <CodeBlock>{`// Good
+const columns = useMemo(() => buildColumns(), []);
+const data = useMemo(() => allData.slice(0, 50), [allData]);
+
+// Bad — new array every render
+const columns = buildColumns();`}</CodeBlock>
+                </div>
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Large datasets (10,000+ rows)</h3>
+                  <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                    <li>Set <code className="text-xs bg-muted px-1 rounded">pagination={"{false}"}</code> and <code className="text-xs bg-muted px-1 rounded">autoHeight={"{false}"}</code> for a fixed virtualized viewport</li>
+                    <li>Avoid complex render functions with many DOM nodes per cell</li>
+                    <li>Use a uniform <code className="text-xs bg-muted px-1 rounded">rowHeight</code> to skip dynamic measurement</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Server-Side Full Example ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Server-Side Operations</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                A complete example with server-side sort, filter, and pagination — all three delegated to your API.
+              </p>
+              <CodeBlock>{`import { useState, useEffect, useCallback } from 'react';
+import { BoltTable, ColumnType, SortDirection } from 'bolt-table';
+
+interface User {
+  [key: string]: unknown;
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export default function UsersTable() {
+  const [data, setData] = useState<User[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(20);
+  const [sortKey, setSortKey] = useState('');
+  const [sortDir, setSortDir] = useState<SortDirection>(null);
+  const [filters, setFilters] = useState<Record<string, string>>({});
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    const res = await fetch('/api/users?' + new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+      ...(sortKey && sortDir ? { sortKey, sortDir } : {}),
+      ...filters,
+    }));
+    const json = await res.json();
+    setData(json.rows);
+    setTotal(json.total);
+    setLoading(false);
+  }, [page, pageSize, sortKey, sortDir, filters]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  return (
+    <BoltTable<User>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      isLoading={loading}
+      pagination={{ current: page, pageSize, total }}
+      onPaginationChange={(p, s) => { setPage(p); setPageSize(s); }}
+      onSortChange={(key, dir) => {
+        setSortKey(key); setSortDir(dir); setPage(1);
+      }}
+      onFilterChange={(f) => { setFilters(f); setPage(1); }}
+    />
+  );
+}`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── BoltTable Props Reference ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">BoltTable Props Reference</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead><tr className="bg-muted/50"><th className="text-left px-4 py-2 font-medium">Prop</th><th className="text-left px-4 py-2 font-medium">Type</th><th className="text-left px-4 py-2 font-medium">Default</th><th className="text-left px-4 py-2 font-medium">Description</th></tr></thead>
+                  <tbody className="divide-y text-xs">
+                    <tr><td className="px-4 py-2 font-mono">columns</td><td className="px-4 py-2 text-muted-foreground">ColumnType&lt;T&gt;[]</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Column definitions (required)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">data</td><td className="px-4 py-2 text-muted-foreground">T[]</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Row data array (required)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">rowKey</td><td className="px-4 py-2 text-muted-foreground">string | (record) =&gt; string</td><td className="px-4 py-2 text-muted-foreground">'id'</td><td className="px-4 py-2 text-muted-foreground">Unique row identifier</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">rowHeight</td><td className="px-4 py-2 text-muted-foreground">number</td><td className="px-4 py-2 text-muted-foreground">40</td><td className="px-4 py-2 text-muted-foreground">Row height in pixels</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">expandedRowHeight</td><td className="px-4 py-2 text-muted-foreground">number</td><td className="px-4 py-2 text-muted-foreground">200</td><td className="px-4 py-2 text-muted-foreground">Estimated expanded row height</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">maxExpandedRowHeight</td><td className="px-4 py-2 text-muted-foreground">number</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Max height (scrollable beyond)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">accentColor</td><td className="px-4 py-2 text-muted-foreground">string</td><td className="px-4 py-2 text-muted-foreground">'#1890ff'</td><td className="px-4 py-2 text-muted-foreground">Theme color for interactive elements</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">className</td><td className="px-4 py-2 text-muted-foreground">string</td><td className="px-4 py-2 text-muted-foreground">''</td><td className="px-4 py-2 text-muted-foreground">Outer wrapper class</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">classNames</td><td className="px-4 py-2 text-muted-foreground">ClassNamesTypes</td><td className="px-4 py-2 text-muted-foreground">{"{}"}</td><td className="px-4 py-2 text-muted-foreground">Granular class overrides</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">styles</td><td className="px-4 py-2 text-muted-foreground">StylesTypes</td><td className="px-4 py-2 text-muted-foreground">{"{}"}</td><td className="px-4 py-2 text-muted-foreground">Inline style overrides</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">icons</td><td className="px-4 py-2 text-muted-foreground">BoltTableIcons</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Custom icon overrides</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">hideGripIcon</td><td className="px-4 py-2 text-muted-foreground">boolean</td><td className="px-4 py-2 text-muted-foreground">false</td><td className="px-4 py-2 text-muted-foreground">Hide drag grip from headers</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">pagination</td><td className="px-4 py-2 text-muted-foreground">PaginationType | false</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Pagination config or false to disable</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">onPaginationChange</td><td className="px-4 py-2 text-muted-foreground">(page, pageSize) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Page or page-size changed</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">onColumnResize</td><td className="px-4 py-2 text-muted-foreground">(key, width) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Column resized</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">onColumnOrderChange</td><td className="px-4 py-2 text-muted-foreground">(order) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Columns reordered</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">onColumnPin</td><td className="px-4 py-2 text-muted-foreground">(key, pinned) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Column pinned/unpinned</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">onColumnHide</td><td className="px-4 py-2 text-muted-foreground">(key, hidden) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Column hidden/shown</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">rowSelection</td><td className="px-4 py-2 text-muted-foreground">RowSelectionConfig&lt;T&gt;</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Row selection config</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">expandable</td><td className="px-4 py-2 text-muted-foreground">ExpandableConfig&lt;T&gt;</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Expandable row config</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">onEndReached</td><td className="px-4 py-2 text-muted-foreground">() =&gt; void</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Infinite scroll trigger</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">onEndReachedThreshold</td><td className="px-4 py-2 text-muted-foreground">number</td><td className="px-4 py-2 text-muted-foreground">5</td><td className="px-4 py-2 text-muted-foreground">Rows from end to trigger</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">isLoading</td><td className="px-4 py-2 text-muted-foreground">boolean</td><td className="px-4 py-2 text-muted-foreground">false</td><td className="px-4 py-2 text-muted-foreground">Show shimmer skeleton rows</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">layoutLoading</td><td className="px-4 py-2 text-muted-foreground">boolean</td><td className="px-4 py-2 text-muted-foreground">false</td><td className="px-4 py-2 text-muted-foreground">Full skeleton (headers + rows)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">onSortChange</td><td className="px-4 py-2 text-muted-foreground">(key, direction) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Server-side sort handler</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">onFilterChange</td><td className="px-4 py-2 text-muted-foreground">(filters) =&gt; void</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Server-side filter handler</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">columnContextMenuItems</td><td className="px-4 py-2 text-muted-foreground">ColumnContextMenuItem[]</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Custom context menu items</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">autoHeight</td><td className="px-4 py-2 text-muted-foreground">boolean</td><td className="px-4 py-2 text-muted-foreground">true</td><td className="px-4 py-2 text-muted-foreground">Auto-size to content (max 10 rows)</td></tr>
+                    <tr><td className="px-4 py-2 font-mono">emptyRenderer</td><td className="px-4 py-2 text-muted-foreground">ReactNode</td><td className="px-4 py-2 text-muted-foreground">—</td><td className="px-4 py-2 text-muted-foreground">Custom empty state content</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Frameworks ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Framework Guides</h2>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Next.js (App Router)</h3>
+                  <p className="text-xs text-muted-foreground">BoltTable uses browser APIs. Add the client boundary:</p>
+                  <CodeBlock>{`'use client';
+import { BoltTable } from 'bolt-table';`}</CodeBlock>
+                </div>
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Next.js (Pages Router)</h3>
+                  <p className="text-xs text-muted-foreground">No special config needed. Pages Router components are client-side by default.</p>
+                </div>
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Vite</h3>
+                  <p className="text-xs text-muted-foreground">Works out of the box. No configuration needed.</p>
+                </div>
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">Remix / React Router</h3>
+                  <p className="text-xs text-muted-foreground">Works out of the box. No configuration needed.</p>
+                </div>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
