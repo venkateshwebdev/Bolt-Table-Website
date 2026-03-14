@@ -604,9 +604,7 @@ function LoadingExample() {
     }, 2500);
   }, []);
 
-  useEffect(() => {
-    simulateLoad();
-  }, [simulateLoad]);
+  // Remove auto-load on mount. Data loads only when button is clicked.
 
   return (
     <ExampleSection
