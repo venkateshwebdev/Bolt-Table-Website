@@ -1,4 +1,5 @@
 export interface Monitor {
+  [key: string]: unknown;
   id: string;
   name: string;
   url: string;
