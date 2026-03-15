@@ -1374,9 +1374,10 @@ export default function App() {
         <Tabs defaultValue="examples" className="space-y-8">
           <TabsList className="grid w-full max-w-lg grid-cols-4">
             <TabsTrigger value="examples">Examples</TabsTrigger>
-            <TabsTrigger value="playground">Playground</TabsTrigger>
-            <TabsTrigger value="usage">Quick Start</TabsTrigger>
             <TabsTrigger value="docs">Docs</TabsTrigger>
+            <TabsTrigger value="usage">Quick Start</TabsTrigger>
+            <TabsTrigger value="playground">Playground</TabsTrigger>
+            
           </TabsList>
 
           <TabsContent value="examples" className="space-y-16">
