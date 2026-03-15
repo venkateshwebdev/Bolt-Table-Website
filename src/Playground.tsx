@@ -108,7 +108,6 @@ interface TableShellProps {
   rowHeight: number;
   accentColor: string;
   autoHeight: boolean;
-  hideGripIcon: boolean;
   pagination: false | { current: number; pageSize: number; total: number };
   onPaginationChange: (page: number, pageSize: number) => void;
   rowSelection?: { type: "checkbox" | "radio"; selectedRowKeys: React.Key[]; onChange: (keys: React.Key[]) => void };
@@ -117,7 +116,7 @@ interface TableShellProps {
   pinnedHeaderBg: string;
 }
 
-const TableShell = memo(function TableShell({ columns, rowHeight, accentColor, autoHeight, hideGripIcon, pagination, onPaginationChange, rowSelection, fullscreen, pinnedBg, pinnedHeaderBg }: TableShellProps) {
+const TableShell = memo(function TableShell({ columns, rowHeight, accentColor, autoHeight, pagination, onPaginationChange, rowSelection, fullscreen, pinnedBg, pinnedHeaderBg }: TableShellProps) {
   const styles = useMemo(() => {
     const s: Record<string, unknown> = {};
     if (pinnedBg) s.pinnedBg = pinnedBg;
@@ -133,7 +132,6 @@ const TableShell = memo(function TableShell({ columns, rowHeight, accentColor, a
       rowHeight={rowHeight}
       accentColor={accentColor}
       autoHeight={fullscreen ? false : autoHeight}
-      hideGripIcon={hideGripIcon}
       pagination={pagination}
       onPaginationChange={onPaginationChange}
       rowSelection={rowSelection}
@@ -148,7 +146,6 @@ interface CodeState {
   accentColor: string;
   rowHeight: number;
   autoHeight: boolean;
-  hideGripIcon: boolean;
   paginationOn: boolean;
   pageSize: number;
   selectionOn: boolean;
@@ -198,7 +195,7 @@ function generateCode(s: CodeState): string {
   if (s.rowHeight !== 40) lines.push(`      rowHeight={${s.rowHeight}}`);
   if (s.accentColor !== "#1890ff") lines.push(`      accentColor="${s.accentColor}"`);
   if (!s.autoHeight) lines.push(`      autoHeight={false}`);
-  if (s.hideGripIcon) lines.push(`      hideGripIcon`);
+
 
   if (s.paginationOn) {
     lines.push(`      pagination={{ current: page, pageSize, total: data.length }}`);
@@ -255,11 +252,10 @@ export default function Playground() {
 
   const [accentColor, setAccentColor] = useState("#1890ff");
   const [rowHeight, setRowHeight] = useState(40);
-  const [autoHeight, setAutoHeight] = useState(true);
-  const [hideGripIcon, setHideGripIcon] = useState(false);
+  const [autoHeight, setAutoHeight] = useState(false);
   const [paginationOn, setPaginationOn] = useState(true);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(20);
   const [selectionOn, setSelectionOn] = useState(false);
   const [selectionType, setSelectionType] = useState<"checkbox" | "radio">("checkbox");
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
@@ -323,7 +319,7 @@ export default function Playground() {
 
   const [resetKey, setResetKey] = useState(0);
   const reset = useCallback(() => {
-    setAccentColor("#1890ff"); setRowHeight(40); setAutoHeight(true); setHideGripIcon(false);
+    setAccentColor("#1890ff"); setRowHeight(40); setAutoHeight(true);
     setPaginationOn(true); setPage(1); setPageSize(10);
     setSelectionOn(false); setSelectionType("checkbox"); setSelectedKeys([]);
     setPinnedBg(""); setPinnedHeaderBg("");
@@ -342,11 +338,11 @@ export default function Playground() {
   }, [fullscreen]);
 
   const codeString = useMemo(() => generateCode({
-    accentColor, rowHeight, autoHeight, hideGripIcon,
+    accentColor, rowHeight, autoHeight,
     paginationOn, pageSize, selectionOn, selectionType,
     pinnedBg, pinnedHeaderBg,
     css: cssVals.current,
-  }), [accentColor, rowHeight, autoHeight, hideGripIcon, paginationOn, pageSize, selectionOn, selectionType, pinnedBg, pinnedHeaderBg, showCode]);
+  }), [accentColor, rowHeight, autoHeight, paginationOn, pageSize, selectionOn, selectionType, pinnedBg, pinnedHeaderBg, showCode]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(codeString).then(() => {
@@ -371,8 +367,7 @@ export default function Playground() {
         <Section title="General">
           <ColorInput label="accentColor" defaultValue="#1890ff" onChange={setAccentColor} />
           <RangeInput label="rowHeight" defaultValue={40} min={28} max={64} suffix="px" onChange={setRowHeight} />
-          <Toggle label="autoHeight" defaultValue={true} onChange={setAutoHeight} />
-          <Toggle label="hideGripIcon" defaultValue={false} onChange={setHideGripIcon} />
+          <Toggle label="autoHeight" defaultValue={false} onChange={setAutoHeight} />
         </Section>
 
         <Section title="Pagination">
@@ -467,7 +462,6 @@ export default function Playground() {
               rowHeight={rowHeight}
               accentColor={accentColor}
               autoHeight={autoHeight}
-              hideGripIcon={hideGripIcon}
               pagination={pagination}
               onPaginationChange={handlePaginationChange}
               rowSelection={rowSelection}
