@@ -31,6 +31,27 @@ A high-performance, zero-dependency\* React table component. Only the rows visib
 
 ---
 
+## Playground
+
+The [live demo](https://bolt-table.vercel.app/) includes an interactive **Playground** tab where you can tweak every prop in real time:
+
+- **Left panel** — controls for all BoltTable props:
+  - General: `accentColor`, `rowHeight`, `autoHeight`, `hideGripIcon`
+  - Pagination: enable/disable, `pageSize`
+  - Row selection: checkbox or radio mode
+  - Header styles: font size, font weight, background, color
+  - Cell styles: font size, background, color
+  - Row styles: hover background, selected background
+  - Pinned styles: `pinnedBg`, pinned header background
+  - Column visibility toggles
+- **Right panel** — live table preview that updates instantly as you change controls
+- **View Code** — click "Code" to see the generated JSX snippet reflecting your current settings, with a copy button
+- **Fullscreen** — expand the playground to fill the screen (press Esc to exit)
+
+Style changes (fonts, colors, backgrounds) update via CSS injection with zero React re-renders for maximum responsiveness.
+
+---
+
 ## Installation
 
 ```bash
