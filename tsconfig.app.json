@@ -25,7 +25,8 @@
     "noUncheckedSideEffectImports": true,
     "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "bolt-table": ["../Bolt-Table/src/index.ts"]
     }
   },
   "include": ["src"]
