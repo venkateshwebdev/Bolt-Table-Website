@@ -7,12 +7,12 @@ import {
 } from "react";
 import { Github, Linkedin, Mail } from "lucide-react";
 import Playground from "./Playground";
-import { BoltTable, type ColumnType, type SortDirection } from "bolt-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { generateMonitors, type Monitor } from "./data";
+import { BoltTable, type ColumnType, type SortDirection } from "bolt-table";
 
 const allData = generateMonitors(200);
 
@@ -100,6 +100,7 @@ function buildColumns(opts?: { pinActions?: boolean }): ColumnType<Monitor>[] {
       title: "Monitor",
       width: 180,
       sortable: true,
+      copy:true,
       sorter: (a: Monitor, b: Monitor) => a.name.localeCompare(b.name),
       render: (_: unknown, record: Monitor) => (
         <div className="flex flex-col">
@@ -391,7 +392,7 @@ function fullCode(body: string) {
 function BasicExample() {
   const columns = useMemo(() => buildColumns(), []);
   const data = useMemo(() => allData.slice(0, 50), []);
-
+  const [rowPinning, setRowPinning] = useState<{ top: React.Key[]; bottom: React.Key[] }>({ top: [], bottom: [] });
   return (
     <ExampleSection
       title="Basic Table"
@@ -421,7 +422,16 @@ function BasicExample() {
           styles={{
             rowHover: { backgroundColor: "var(--color-muted)" },
             pinnedBg: "var(--color-background)",
-            
+          }}
+          rowPinning={rowPinning}
+          onRowPin={(key, pinned) => {
+            setRowPinning((prev) => {
+              const top = (prev.top ?? []).filter((k) => String(k) !== String(key));
+              const bottom = (prev.bottom ?? []).filter((k) => String(k) !== String(key));
+              if (pinned === "top") top.push(key);
+              if (pinned === "bottom") bottom.push(key);
+              return { top, bottom };
+            });
           }}
         />
       </div>
@@ -651,6 +661,182 @@ export default function Example() {
           rowKey="id"
           rowHeight={48}
           pagination={{ pageSize: 10 }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function RowPinningExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 30), []);
+  const [rowPinning, setRowPinning] = useState<{ top: React.Key[]; bottom: React.Key[] }>({ top: [], bottom: [] });
+
+  const handleRowPin = useCallback((key: React.Key, pinned: "top" | "bottom" | false) => {
+    setRowPinning((prev) => {
+      const top = (prev.top ?? []).filter((k) => String(k) !== String(key));
+      const bottom = (prev.bottom ?? []).filter((k) => String(k) !== String(key));
+      if (pinned === "top") top.push(key);
+      if (pinned === "bottom") bottom.push(key);
+      return { top, bottom };
+    });
+  }, []);
+
+  return (
+    <ExampleSection
+      title="Row Pinning"
+      description="Pin rows to the top or bottom so they stay visible while scrolling. Right-click any cell to pin/unpin rows. Pinned rows transcend pagination."
+      code={fullCode(`  const [rowPinning, setRowPinning] = useState({ top: [], bottom: [] });
+
+  const handleRowPin = (key, pinned) => {
+    setRowPinning(prev => {
+      const top = (prev.top ?? []).filter(k => String(k) !== String(key));
+      const bottom = (prev.bottom ?? []).filter(k => String(k) !== String(key));
+      if (pinned === 'top') top.push(key);
+      if (pinned === 'bottom') bottom.push(key);
+      return { top, bottom };
+    });
+  };
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      rowPinning={rowPinning}
+      onRowPin={handleRowPin}
+      styles={{
+        pinnedRowBg: "rgba(255, 255, 255, 0.95)",
+      }}
+    />
+  );`)}
+      toolbar={
+        (rowPinning.top.length > 0 || rowPinning.bottom.length > 0) ? (
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 text-sm">
+            {rowPinning.top.length > 0 && (
+              <Badge variant="secondary" className="text-[10px]">{rowPinning.top.length} pinned top</Badge>
+            )}
+            {rowPinning.bottom.length > 0 && (
+              <Badge variant="secondary" className="text-[10px]">{rowPinning.bottom.length} pinned bottom</Badge>
+            )}
+            <Separator orientation="vertical" className="h-4" />
+            <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setRowPinning({ top: [], bottom: [] })}>
+              Unpin all
+            </Button>
+          </div>
+        ) : undefined
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          autoHeight
+          pagination={{ pageSize: 10 }}
+          rowPinning={rowPinning}
+          onRowPin={handleRowPin}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+            pinnedRowBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function CellCopyExample() {
+  const columns = useMemo(
+    () =>
+      buildColumns().map((col) => {
+        if (col.key === "name") return { ...col, copy: true };
+        if (col.key === "region")
+          return {
+            ...col,
+            copy: (_: unknown, record: Monitor) => `${record.name} — ${record.region}`,
+          };
+        return col;
+      }),
+    [],
+  );
+  const data = useMemo(() => allData.slice(0, 20), []);
+  const [rowPinning, setRowPinning] = useState<{ top: React.Key[]; bottom: React.Key[] }>({ top: [], bottom: [] });
+
+  const handleRowPin = useCallback((key: React.Key, pinned: "top" | "bottom" | false) => {
+    setRowPinning((prev) => {
+      const top = (prev.top ?? []).filter((k) => String(k) !== String(key));
+      const bottom = (prev.bottom ?? []).filter((k) => String(k) !== String(key));
+      if (pinned === "top") top.push(key);
+      if (pinned === "bottom") bottom.push(key);
+      return { top, bottom };
+    });
+  }, []);
+
+  return (
+    <ExampleSection
+      title="Cell Context Menu & Copy"
+      description='Right-click (or long-press on mobile) any cell to see a context menu with copy and row pinning. The "Monitor" column copies raw value; "Region" copies a formatted string.'
+      code={fullCode(`  const columns = [
+    { key: "name", dataIndex: "name", title: "Name", copy: true },
+    {
+      key: "region", dataIndex: "region", title: "Region",
+      copy: (value, record) => \`\${record.name} — \${record.region}\`,
+    },
+    // ... other columns
+  ];
+
+  const [rowPinning, setRowPinning] = useState({ top: [], bottom: [] });
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowPinning={rowPinning}
+      onRowPin={(key, pinned) => {
+        setRowPinning(prev => {
+          const top = prev.top.filter(k => String(k) !== String(key));
+          const bottom = prev.bottom.filter(k => String(k) !== String(key));
+          if (pinned === 'top') top.push(key);
+          if (pinned === 'bottom') bottom.push(key);
+          return { top, bottom };
+        });
+      }}
+    />
+  );`)}
+    >
+      <div className="rounded-lg border bg-muted/30 p-3 mb-2">
+        <p className="text-xs text-muted-foreground">
+          <strong>Try it:</strong> Right-click any cell (or long-press on mobile) to see "Copy" and "Pin to Top/Bottom" options.
+        </p>
+      </div>
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          autoHeight
+          pagination={{ pageSize: 10 }}
+          rowPinning={rowPinning}
+          onRowPin={handleRowPin}
           classNames={{
             header: "text-xs font-medium text-muted-foreground",
             cell: "text-sm",
@@ -1386,6 +1572,8 @@ export default function App() {
             <SelectionExample />
             <ExpandableExample />
             <PinningExample />
+            <RowPinningExample />
+            <CellCopyExample />
             <LoadingExample />
             <InfiniteScrollExample />
             <VirtualizationExample />
@@ -2588,6 +2776,287 @@ const nameColumn: ColumnType<User> = {
 
             <Separator />
 
+            {/* ── Row Pinning ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Row Pinning
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Pin rows to the top or bottom of the table body so they stay
+                visible while scrolling. Pinned rows transcend pagination —
+                they're always visible regardless of which page the user is on.
+              </p>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Static pinning</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Pin specific rows declaratively via the{" "}
+                    <code className="text-xs bg-muted px-1 rounded">
+                      rowPinning
+                    </code>{" "}
+                    prop.
+                  </p>
+                  <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={data}
+  rowKey="id"
+  rowPinning={{
+    top: ['total-row'],
+    bottom: ['footer-row'],
+  }}
+/>`}</CodeBlock>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">
+                    Interactive (context menu)
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Provide{" "}
+                    <code className="text-xs bg-muted px-1 rounded">
+                      onRowPin
+                    </code>{" "}
+                    to let users pin/unpin via right-click.
+                  </p>
+                  <CodeBlock>{`const [rowPinning, setRowPinning] =
+  useState({ top: [], bottom: [] });
+
+<BoltTable
+  rowPinning={rowPinning}
+  onRowPin={(key, pinned) => {
+    setRowPinning(prev => {
+      const top = prev.top.filter(
+        k => String(k) !== String(key));
+      const bottom = prev.bottom.filter(
+        k => String(k) !== String(key));
+      if (pinned === 'top') top.push(key);
+      if (pinned === 'bottom')
+        bottom.push(key);
+      return { top, bottom };
+    });
+  }}
+/>`}</CodeBlock>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="text-left px-4 py-2 font-medium">Field</th>
+                      <th className="text-left px-4 py-2 font-medium">Type</th>
+                      <th className="text-left px-4 py-2 font-medium">
+                        Description
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-xs">top</td>
+                      <td className="px-4 py-2 text-muted-foreground text-xs">
+                        React.Key[]
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Row keys pinned to the top. Order is preserved.
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-xs">bottom</td>
+                      <td className="px-4 py-2 text-muted-foreground text-xs">
+                        React.Key[]
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Row keys pinned to the bottom. Order is preserved.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <p className="text-sm font-medium">Key behaviors</p>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>
+                    Pinned rows use{" "}
+                    <code className="text-xs bg-muted px-1 rounded">
+                      position: sticky
+                    </code>{" "}
+                    with{" "}
+                    <code className="text-xs bg-muted px-1 rounded">
+                      backdropFilter: blur(12px)
+                    </code>
+                  </li>
+                  <li>
+                    Column pinning (sticky left/right) works within pinned rows
+                  </li>
+                  <li>
+                    Row selection and hover styles work on pinned rows
+                  </li>
+                  <li>
+                    Customize with{" "}
+                    <code className="text-xs bg-muted px-1 rounded">
+                      classNames.pinnedRow
+                    </code>
+                    ,{" "}
+                    <code className="text-xs bg-muted px-1 rounded">
+                      styles.pinnedRow
+                    </code>
+                    , and{" "}
+                    <code className="text-xs bg-muted px-1 rounded">
+                      styles.pinnedRowBg
+                    </code>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Cell Context Menu & Copy ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Cell Context Menu & Copy
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Right-click (or long-press on mobile) any body cell to see a
+                context menu with row pinning and copy actions. The menu only
+                appears when at least one action is available.
+              </p>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">
+                    Simple copy (raw value)
+                  </h3>
+                  <CodeBlock>{`{
+  key: 'id',
+  dataIndex: 'id',
+  title: 'ID',
+  copy: true,  // copies String(value)
+}`}</CodeBlock>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Custom copy function</h3>
+                  <CodeBlock>{`{
+  key: 'email',
+  dataIndex: 'email',
+  title: 'Email',
+  copy: (value, record) =>
+    \`\${record.name} <\${value}>\`,
+}`}</CodeBlock>
+                </div>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="text-left px-4 py-2 font-medium">
+                        Action
+                      </th>
+                      <th className="text-left px-4 py-2 font-medium">
+                        Shown when
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    <tr>
+                      <td className="px-4 py-2 text-xs">
+                        Pin to Top / Unpin from Top
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground text-xs">
+                        <code className="bg-muted px-1 rounded">onRowPin</code>{" "}
+                        prop is provided
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 text-xs">
+                        Pin to Bottom / Unpin from Bottom
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground text-xs">
+                        <code className="bg-muted px-1 rounded">onRowPin</code>{" "}
+                        prop is provided
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 text-xs">Copy</td>
+                      <td className="px-4 py-2 text-muted-foreground text-xs">
+                        Column has{" "}
+                        <code className="bg-muted px-1 rounded">
+                          copy: true
+                        </code>{" "}
+                        or a copy function
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Mobile Compatibility ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Mobile Compatibility
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                BoltTable context menus work on touch devices via{" "}
+                <strong>long-press</strong> (touch-and-hold). No additional
+                configuration is needed — mobile support is built in.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">
+                    Column header context menu
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Long-press (~500ms) any column header to open the context
+                    menu with sort, filter, pin, and hide options — just like
+                    right-click on desktop.
+                  </p>
+                </div>
+                <div className="rounded-lg border p-4 space-y-2">
+                  <h3 className="text-sm font-semibold">
+                    Cell context menu
+                  </h3>
+                  <p className="text-xs text-muted-foreground">
+                    Long-press (~500ms) any body cell to open the context menu
+                    with row pinning and copy actions.
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4 space-y-2">
+                <p className="text-sm font-medium">How long-press works</p>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>
+                    Touch a header or cell and hold for <strong>500ms</strong> —
+                    the context menu appears at the touch position
+                  </li>
+                  <li>
+                    If you move your finger more than <strong>10px</strong>{" "}
+                    before the timer fires, the long-press is cancelled (you're
+                    scrolling, not long-pressing)
+                  </li>
+                  <li>
+                    Lifting your finger before 500ms cancels the long-press
+                  </li>
+                  <li>
+                    The browser's default context menu is suppressed during the
+                    long-press gesture
+                  </li>
+                </ul>
+              </div>
+              <div className="rounded-lg border bg-blue-50 dark:bg-blue-950/30 p-4 space-y-2">
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-300">
+                  No configuration needed
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-400">
+                  Mobile context menus are enabled by default. Both column header
+                  and cell context menus automatically detect touch devices and
+                  register the appropriate touch event handlers. Column
+                  drag-and-drop also works on touch devices.
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
             {/* ── Loading States ── */}
             <div className="space-y-4">
               <h2 className="text-2xl font-bold tracking-tight">
@@ -2819,6 +3288,14 @@ const loadMore = async () => {
                             Expanded content panel
                           </td>
                         </tr>
+                        <tr>
+                          <td className="px-4 py-2 font-mono text-xs">
+                            pinnedRow
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground">
+                            Pinned row wrapper div
+                          </td>
+                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -2896,6 +3373,39 @@ const loadMore = async () => {
                           </td>
                           <td className="px-4 py-2 text-muted-foreground">
                             Selected row background
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-2 font-mono text-xs">
+                            expandedRow
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground text-xs">
+                            CSSProperties
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground">
+                            Expanded content panel
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-2 font-mono text-xs">
+                            pinnedRow
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground text-xs">
+                            CSSProperties
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground">
+                            Pinned row wrapper
+                          </td>
+                        </tr>
+                        <tr>
+                          <td className="px-4 py-2 font-mono text-xs">
+                            pinnedRowBg
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground text-xs">
+                            string
+                          </td>
+                          <td className="px-4 py-2 text-muted-foreground">
+                            CSS color for pinned row cell backgrounds
                           </td>
                         </tr>
                       </tbody>
@@ -3448,6 +3958,26 @@ export default function UsersTable() {
                       <td className="px-4 py-2 text-muted-foreground">—</td>
                       <td className="px-4 py-2 text-muted-foreground">
                         Row selection config
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">rowPinning</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        RowPinningConfig
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Row pinning config ({"{ top?, bottom? }"})
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onRowPin</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (key, pinned) =&gt; void
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Row pinned/unpinned via cell context menu
                       </td>
                     </tr>
                     <tr>
