@@ -21,8 +21,8 @@ importers:
         specifier: ^3.13.22
         version: 3.13.22(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       bolt-table:
-        specifier: ^0.1.9
-        version: 0.1.9(@tanstack/react-virtual@3.13.22(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+        specifier: ^0.1.14
+        version: 0.1.14(@tanstack/react-virtual@3.13.22(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -826,8 +826,8 @@ packages:
     resolution: {integrity: sha512-oP5VkATKlNwcgvxi0vM0p/D3n2C3EReYVX+DNYs5TjZFn/oQt2j+4sVJtSMr18pdRr8wjTcBl6LoV+FUwzPmNA==}
     engines: {node: '>=18'}
 
-  bolt-table@0.1.9:
-    resolution: {integrity: sha512-xAxsWm1I8vVvSN4lJoVDADAc5NBBTg826SwZeBe8ZelIdKnk9CRrfvnihBUZnujiaFofMfdMnopzwmdWI4PYVQ==}
+  bolt-table@0.1.14:
+    resolution: {integrity: sha512-8h9BRSNPk/xSyCq78AlrdJQvkZMQpPb/JeLeVSXgvAJ2XVWcP42WxDo4d4wWJUofIwyVKmgc09SZQvRuobEDQA==}
     peerDependencies:
       '@tanstack/react-virtual': ^3.13.22
       react: '>=18'
@@ -3162,7 +3162,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  bolt-table@0.1.9(@tanstack/react-virtual@3.13.22(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
+  bolt-table@0.1.14(@tanstack/react-virtual@3.13.22(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(react-dom@19.2.4(react@19.2.4))(react@19.2.4):
     dependencies:
       '@tanstack/react-virtual': 3.13.22(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react: 19.2.4
