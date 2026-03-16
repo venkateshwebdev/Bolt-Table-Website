@@ -15,6 +15,7 @@ import {
   Table2,
   Copy,
   Check,
+  Pin,
 } from "lucide-react";
 
 const playgroundData = generateMonitors(80);
@@ -114,9 +115,11 @@ interface TableShellProps {
   fullscreen: boolean;
   pinnedBg: string;
   pinnedHeaderBg: string;
+  rowPinning?: { top: React.Key[]; bottom: React.Key[] };
+  onRowPin?: (key: React.Key, pinned: "top" | "bottom" | false) => void;
 }
 
-const TableShell = memo(function TableShell({ columns, rowHeight, accentColor, autoHeight, pagination, onPaginationChange, rowSelection, fullscreen, pinnedBg, pinnedHeaderBg }: TableShellProps) {
+const TableShell = memo(function TableShell({ columns, rowHeight, accentColor, autoHeight, pagination, onPaginationChange, rowSelection, fullscreen, pinnedBg, pinnedHeaderBg, rowPinning, onRowPin }: TableShellProps) {
   const styles = useMemo(() => {
     const s: Record<string, unknown> = {};
     if (pinnedBg) s.pinnedBg = pinnedBg;
@@ -135,6 +138,8 @@ const TableShell = memo(function TableShell({ columns, rowHeight, accentColor, a
       pagination={pagination}
       onPaginationChange={onPaginationChange}
       rowSelection={rowSelection}
+      rowPinning={rowPinning}
+      onRowPin={onRowPin}
       styles={styles as any}
     />
   );
@@ -150,6 +155,7 @@ interface CodeState {
   pageSize: number;
   selectionOn: boolean;
   selectionType: string;
+  rowPinningOn: boolean;
   pinnedBg: string;
   pinnedHeaderBg: string;
   css: {
@@ -178,6 +184,10 @@ function generateCode(s: CodeState): string {
 
   if (s.selectionOn) {
     lines.push(`  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);`);
+    lines.push(``);
+  }
+  if (s.rowPinningOn) {
+    lines.push(`  const [rowPinning, setRowPinning] = useState({ top: [], bottom: [] });`);
     lines.push(``);
   }
   if (s.paginationOn) {
@@ -209,6 +219,19 @@ function generateCode(s: CodeState): string {
     lines.push(`        type: "${s.selectionType}",`);
     lines.push(`        selectedRowKeys: selectedKeys,`);
     lines.push(`        onChange: (keys) => setSelectedKeys(keys),`);
+    lines.push(`      }}`);
+  }
+
+  if (s.rowPinningOn) {
+    lines.push(`      rowPinning={rowPinning}`);
+    lines.push(`      onRowPin={(key, pinned) => {`);
+    lines.push(`        setRowPinning(prev => {`);
+    lines.push(`          const top = prev.top.filter(k => String(k) !== String(key));`);
+    lines.push(`          const bottom = prev.bottom.filter(k => String(k) !== String(key));`);
+    lines.push(`          if (pinned === 'top') top.push(key);`);
+    lines.push(`          if (pinned === 'bottom') bottom.push(key);`);
+    lines.push(`          return { top, bottom };`);
+    lines.push(`        });`);
     lines.push(`      }}`);
   }
 
@@ -261,6 +284,8 @@ export default function Playground() {
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [visibleCols, setVisibleCols] = useState<Record<string, boolean>>(() => Object.fromEntries(PLAYGROUND_COLUMNS.map((c) => [c.key, true])));
   const [fullscreen, setFullscreen] = useState(false);
+  const [rowPinningOn, setRowPinningOn] = useState(false);
+  const [rowPinning, setRowPinning] = useState<{ top: React.Key[]; bottom: React.Key[] }>({ top: [], bottom: [] });
   const [pinnedBg, setPinnedBg] = useState("");
   const [pinnedHeaderBg, setPinnedHeaderBg] = useState("");
   const [showCode, setShowCode] = useState(false);
@@ -317,11 +342,22 @@ export default function Playground() {
     [selectionOn, selectionType, selectedKeys],
   );
 
+  const handleRowPin = useCallback((key: React.Key, pinned: "top" | "bottom" | false) => {
+    setRowPinning((prev) => {
+      const top = (prev.top ?? []).filter((k) => String(k) !== String(key));
+      const bottom = (prev.bottom ?? []).filter((k) => String(k) !== String(key));
+      if (pinned === "top") top.push(key);
+      if (pinned === "bottom") bottom.push(key);
+      return { top, bottom };
+    });
+  }, []);
+
   const [resetKey, setResetKey] = useState(0);
   const reset = useCallback(() => {
     setAccentColor("#1890ff"); setRowHeight(40); setAutoHeight(true);
     setPaginationOn(true); setPage(1); setPageSize(10);
     setSelectionOn(false); setSelectionType("checkbox"); setSelectedKeys([]);
+    setRowPinningOn(false); setRowPinning({ top: [], bottom: [] });
     setPinnedBg(""); setPinnedHeaderBg("");
     setVisibleCols(Object.fromEntries(PLAYGROUND_COLUMNS.map((c) => [c.key, true])));
     cssVals.current = { headerFontSize: 12, headerFontWeight: "500", headerBg: "", headerColor: "", cellFontSize: 13, cellBg: "", cellColor: "", rowHoverBg: "", rowSelectedBg: "" };
@@ -340,9 +376,9 @@ export default function Playground() {
   const codeString = useMemo(() => generateCode({
     accentColor, rowHeight, autoHeight,
     paginationOn, pageSize, selectionOn, selectionType,
-    pinnedBg, pinnedHeaderBg,
+    rowPinningOn, pinnedBg, pinnedHeaderBg,
     css: cssVals.current,
-  }), [accentColor, rowHeight, autoHeight, paginationOn, pageSize, selectionOn, selectionType, pinnedBg, pinnedHeaderBg, showCode]);
+  }), [accentColor, rowHeight, autoHeight, paginationOn, pageSize, selectionOn, selectionType, rowPinningOn, pinnedBg, pinnedHeaderBg, showCode]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(codeString).then(() => {
@@ -378,6 +414,30 @@ export default function Playground() {
         <Section title="Row Selection">
           <Toggle label="Enabled" defaultValue={false} onChange={setSelectionOn} />
           <Select label="Type" defaultValue="checkbox" options={[{ value: "checkbox", label: "Checkbox" }, { value: "radio", label: "Radio" }]} onChange={(v) => setSelectionType(v as "checkbox" | "radio")} />
+        </Section>
+
+        <Section title="Row Pinning">
+          <Toggle label="Enabled" defaultValue={false} onChange={(v) => { setRowPinningOn(v); if (!v) setRowPinning({ top: [], bottom: [] }); }} />
+          {rowPinningOn && (rowPinning.top.length > 0 || rowPinning.bottom.length > 0) && (
+            <div className="space-y-1">
+              {rowPinning.top.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground"><Pin size={10} className="inline mr-1" />{rowPinning.top.length} pinned top</span>
+                </div>
+              )}
+              {rowPinning.bottom.length > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground"><Pin size={10} className="inline mr-1" />{rowPinning.bottom.length} pinned bottom</span>
+                </div>
+              )}
+              <button onClick={() => setRowPinning({ top: [], bottom: [] })} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer underline">
+                Unpin all
+              </button>
+            </div>
+          )}
+          {rowPinningOn && rowPinning.top.length === 0 && rowPinning.bottom.length === 0 && (
+            <p className="text-[10px] text-muted-foreground">Right-click any cell to pin rows</p>
+          )}
         </Section>
 
         <Section title="Header Styles" defaultOpen={false}>
@@ -422,6 +482,7 @@ export default function Playground() {
             <span className="text-xs font-semibold text-foreground">{showCode ? "Code" : "Preview"}</span>
             <Badge variant="secondary" className="text-[10px] font-mono">{playgroundData.length} rows</Badge>
             {selectionOn && selectedKeys.length > 0 && <Badge variant="outline" className="text-[10px]">{selectedKeys.length} selected</Badge>}
+            {rowPinningOn && (rowPinning.top.length + rowPinning.bottom.length) > 0 && <Badge variant="outline" className="text-[10px]">{rowPinning.top.length + rowPinning.bottom.length} pinned</Badge>}
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -468,6 +529,8 @@ export default function Playground() {
               fullscreen={fullscreen}
               pinnedBg={pinnedBg}
               pinnedHeaderBg={pinnedHeaderBg}
+              rowPinning={rowPinningOn ? rowPinning : undefined}
+              onRowPin={rowPinningOn ? handleRowPin : undefined}
             />
           </div>
         )}
