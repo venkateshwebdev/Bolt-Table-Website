@@ -303,12 +303,14 @@ function CodeBlock({ children }: { children: string }) {
 }
 
 function ExampleSection({
+  id,
   title,
   description,
   code,
   toolbar,
   children,
 }: {
+  id?: string;
   title: string;
   description: string;
   code: string;
@@ -318,7 +320,7 @@ function ExampleSection({
   const [showCode, setShowCode] = useState(false);
 
   return (
-    <div className="space-y-4">
+    <div id={id} className="space-y-4 scroll-mt-24">
       <div className="flex items-start justify-between gap-4">
         <SectionHeader title={title} description={description} />
         <Button
@@ -395,6 +397,7 @@ function BasicExample() {
   const [rowPinning, setRowPinning] = useState<{ top: React.Key[]; bottom: React.Key[] }>({ top: [], bottom: [] });
   return (
     <ExampleSection
+      id="example-basic"
       title="Basic Table"
       description="A simple table with sorting, filtering, column reordering (drag headers), column resizing (drag edges), and right-click context menu. Try it out."
       code={fullCode(`  return (
@@ -447,6 +450,7 @@ function PaginationExample() {
 
   return (
     <ExampleSection
+      id="example-pagination"
       title="Pagination"
       description="Client-side pagination with configurable page size. BoltTable slices the data automatically."
       code={fullCode(`  const [page, setPage] = useState(1);
@@ -498,6 +502,7 @@ function SelectionExample() {
 
   return (
     <ExampleSection
+      id="example-selection"
       title="Row Selection"
       description="Checkbox selection with select-all, indeterminate state, and controlled selection. Supports radio mode too."
       code={fullCode(`  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
@@ -569,6 +574,7 @@ function ExpandableExample() {
 
   return (
     <ExampleSection
+      id="example-expandable"
       title="Expandable Rows"
       description="Click the chevron to expand a row and see detailed information. Content height is auto-measured by ResizeObserver."
       code={fullCode(`  return (
@@ -628,6 +634,7 @@ function PinningExample() {
 
   return (
     <ExampleSection
+      id="example-column-pinning"
       title="Column Pinning"
       description='The "Actions" column is pinned to the right. Right-click any header to pin/unpin columns. Scroll horizontally to see the sticky effect.'
       code={`${CODE_IMPORTS}\n\n${CODE_TYPES}\n\nconst columns: ColumnType<Monitor>[] = [
@@ -679,6 +686,7 @@ function RowPinningExample() {
   const columns = useMemo(() => buildColumns(), []);
   const data = useMemo(() => allData.slice(0, 30), []);
   const [rowPinning, setRowPinning] = useState<{ top: React.Key[]; bottom: React.Key[] }>({ top: [], bottom: [] });
+  const [keepAcrossPages, setKeepAcrossPages] = useState(false);
 
   const handleRowPin = useCallback((key: React.Key, pinned: "top" | "bottom" | false) => {
     setRowPinning((prev) => {
@@ -692,8 +700,9 @@ function RowPinningExample() {
 
   return (
     <ExampleSection
+      id="example-row-pinning"
       title="Row Pinning"
-      description="Pin rows to the top or bottom so they stay visible while scrolling. Right-click any cell to pin/unpin rows. Pinned rows transcend pagination."
+      description="Pin rows to the top or bottom so they stay visible while scrolling. Right-click any cell to pin/unpin rows. Pinned rows transcend pagination. Toggle keepPinnedRowsAcrossPages to keep pinned rows visible after navigating to a different page."
       code={fullCode(`  const [rowPinning, setRowPinning] = useState({ top: [], bottom: [] });
 
   const handleRowPin = (key, pinned) => {
@@ -715,26 +724,41 @@ function RowPinningExample() {
       pagination={{ pageSize: 10 }}
       rowPinning={rowPinning}
       onRowPin={handleRowPin}
+      keepPinnedRowsAcrossPages={true}
       styles={{
         pinnedRowBg: "rgba(255, 255, 255, 0.95)",
       }}
     />
   );`)}
       toolbar={
-        (rowPinning.top.length > 0 || rowPinning.bottom.length > 0) ? (
-          <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 text-sm">
-            {rowPinning.top.length > 0 && (
-              <Badge variant="secondary" className="text-[10px]">{rowPinning.top.length} pinned top</Badge>
-            )}
-            {rowPinning.bottom.length > 0 && (
-              <Badge variant="secondary" className="text-[10px]">{rowPinning.bottom.length} pinned bottom</Badge>
-            )}
-            <Separator orientation="vertical" className="h-4" />
-            <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setRowPinning({ top: [], bottom: [] })}>
-              Unpin all
-            </Button>
-          </div>
-        ) : undefined
+        <div className="flex items-center gap-2 flex-wrap">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={keepAcrossPages}
+              onChange={(e) => setKeepAcrossPages(e.target.checked)}
+              className="accent-primary"
+              style={{ colorScheme: "light dark" }}
+            />
+            <span className="text-xs text-muted-foreground">
+              keepPinnedRowsAcrossPages
+            </span>
+          </label>
+          {(rowPinning.top.length > 0 || rowPinning.bottom.length > 0) && (
+            <>
+              <Separator orientation="vertical" className="h-4" />
+              {rowPinning.top.length > 0 && (
+                <Badge variant="secondary" className="text-[10px]">{rowPinning.top.length} pinned top</Badge>
+              )}
+              {rowPinning.bottom.length > 0 && (
+                <Badge variant="secondary" className="text-[10px]">{rowPinning.bottom.length} pinned bottom</Badge>
+              )}
+              <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={() => setRowPinning({ top: [], bottom: [] })}>
+                Unpin all
+              </Button>
+            </>
+          )}
+        </div>
       }
     >
       <div className="rounded-lg border overflow-hidden">
@@ -747,6 +771,7 @@ function RowPinningExample() {
           pagination={{ pageSize: 10 }}
           rowPinning={rowPinning}
           onRowPin={handleRowPin}
+          keepPinnedRowsAcrossPages={keepAcrossPages}
           classNames={{
             header: "text-xs font-medium text-muted-foreground",
             cell: "text-sm",
@@ -791,6 +816,7 @@ function CellCopyExample() {
 
   return (
     <ExampleSection
+      id="example-cell-copy"
       title="Cell Context Menu & Copy"
       description='Right-click (or long-press on mobile) any cell to see a context menu with copy and row pinning. The "Monitor" column copies raw value; "Region" copies a formatted string.'
       code={fullCode(`  const columns = [
@@ -867,6 +893,7 @@ function LoadingExample() {
 
   return (
     <ExampleSection
+      id="example-loading"
       title="Loading / Shimmer"
       description="Animated skeleton rows while data is loading. Click reload to see it again."
       code={fullCode(`  const [isLoading, setIsLoading] = useState(true);
@@ -940,6 +967,7 @@ function InfiniteScrollExample() {
 
   return (
     <ExampleSection
+      id="example-infinite-scroll"
       title="Infinite Scroll"
       description="Scroll to the bottom to load more rows. Shimmer rows appear at the bottom while loading."
       code={fullCode(`  const [data, setData] = useState<Monitor[]>([]);
@@ -1002,6 +1030,7 @@ function VirtualizationExample() {
 
   return (
     <ExampleSection
+      id="example-virtualized"
       title="10,000 Rows — Virtualized"
       description="All 10,000 rows rendered with virtualization. Only the visible rows are in the DOM. Scroll is buttery smooth."
       code={fullCode(`  const largeData = generateData(10_000);
@@ -1046,6 +1075,7 @@ function StylingExample() {
 
   return (
     <ExampleSection
+      id="example-styling"
       title="Custom Accent Color"
       description="Use the accentColor prop to theme interactive elements — sort indicators, filter icons, resize line, selected rows, and pagination."
       code={fullCode(`  return (
@@ -1116,6 +1146,7 @@ function EmptyStateExample() {
 
   return (
     <ExampleSection
+      id="example-empty-state"
       title="Empty State"
       description="Custom empty renderer when there is no data to display."
       code={fullCode(`  return (
@@ -1241,6 +1272,7 @@ function ServerSideExample() {
 
   return (
     <ExampleSection
+      id="example-server-side"
       title="Server-Side Operations"
       description="Sort, filter, and paginate callbacks delegate to your server. This simulates a 600ms API delay."
       code={fullCode(`  const [page, setPage] = useState(1);
@@ -1323,20 +1355,86 @@ function ServerSideExample() {
 }
 
 function CombinedExample() {
-  const columns = useMemo(() => buildColumns({ pinActions: true }), []);
-  const data = useMemo(() => allData.slice(0, 50), []);
+  const columns = useMemo((): ColumnType<Monitor>[] => {
+    const base = buildColumns({ pinActions: true }).map((col) => {
+      if (col.key === "name") return { ...col, copy: true, editable: true };
+      if (col.key === "region")
+        return {
+          ...col,
+          editable: true,
+          copy: (_: unknown, record: Monitor) =>
+            `${record.name} — ${record.region}`,
+        };
+      if (col.key === "latency" || col.key === "uptime")
+        return { ...col, editable: true };
+      return col;
+    });
+
+    const healthKeys = new Set(["status", "latency", "uptime"]);
+    const configKeys = new Set(["region", "method", "interval"]);
+
+    const healthChildren = base.filter((c) => healthKeys.has(c.key));
+    const configChildren = base.filter((c) => configKeys.has(c.key));
+    const rest = base.filter(
+      (c) => !healthKeys.has(c.key) && !configKeys.has(c.key),
+    );
+
+    const nameIdx = rest.findIndex((c) => c.key === "name");
+    const before = rest.slice(0, nameIdx + 1);
+    const after = rest.slice(nameIdx + 1);
+
+    return [
+      ...before,
+      { key: "healthGroup", title: "Health", children: healthChildren } as ColumnType<Monitor>,
+      { key: "configGroup", title: "Configuration", children: configChildren } as ColumnType<Monitor>,
+      ...after,
+    ];
+  }, []);
+  const [data, setData] = useState(() => allData.slice(0, 50));
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const [rowPinning, setRowPinning] = useState<{
+    top: React.Key[];
+    bottom: React.Key[];
+  }>({ top: [], bottom: [] });
+
+  const handleRowPin = useCallback(
+    (key: React.Key, pinned: "top" | "bottom" | false) => {
+      setRowPinning((prev) => {
+        const top = (prev.top ?? []).filter(
+          (k) => String(k) !== String(key),
+        );
+        const bottom = (prev.bottom ?? []).filter(
+          (k) => String(k) !== String(key),
+        );
+        if (pinned === "top") top.push(key);
+        if (pinned === "bottom") bottom.push(key);
+        return { top, bottom };
+      });
+    },
+    [],
+  );
+
+  const rowClassName = useCallback((record: Monitor) => {
+    if (record.status === "down") return "bg-red-50 dark:bg-red-950/20";
+    if (record.status === "degraded")
+      return "bg-yellow-50 dark:bg-yellow-950/20";
+    return "";
+  }, []);
 
   return (
     <ExampleSection
-      title="Full Featured"
-      description="Selection + expandable rows + pinned columns + pagination — all combined."
+      id="example-full-featured"
+      title="Full Featured Table"
+      description="Everything at once — row selection, expandable rows, nested column groups, pinned columns, row pinning, cell copy, conditional row styling, inline editing (right-click → Edit), sorting, filtering, column resizing, drag reorder, pagination, and context menus."
       code={fullCode(`  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+  const [rowPinning, setRowPinning] = useState({ top: [], bottom: [] });
+  const [data, setData] = useState(initialData);
 
-  // Pin "actions" column to the right
-  const cols = columns.map((c) =>
-    c.key === "actions" ? { ...c, pinned: "right" as const } : c
-  );
+  const cols = columns.map((c) => {
+    if (c.key === "actions") return { ...c, pinned: "right" };
+    if (c.key === "name") return { ...c, copy: true, editable: true };
+    return c;
+  });
 
   return (
     <BoltTable<Monitor>
@@ -1352,36 +1450,75 @@ function CombinedExample() {
       }}
       expandable={{
         rowExpandable: () => true,
-        expandedRowRender: (record) => (
-          <div>
-            <h4>{record.name}</h4>
-            <p>{record.region} — {record.latency}ms — {record.uptime}%</p>
-          </div>
-        ),
+        expandedRowRender: (record) => <ExpandedContent record={record} />,
+      }}
+      rowPinning={rowPinning}
+      onRowPin={(key, pinned) => { /* update rowPinning state */ }}
+      rowClassName={(record) => {
+        if (record.status === "down") return "bg-red-50";
+        if (record.status === "degraded") return "bg-yellow-50";
+        return "";
+      }}
+      onEdit={(value, record, dataIndex, rowIndex) => {
+        setData(prev => prev.map((r, i) =>
+          i === rowIndex ? { ...r, [dataIndex]: value } : r
+        ));
       }}
       styles={{ pinnedBg: "var(--color-background)" }}
-      onColumnResize={(key, width) => console.log(key, width)}
-      onColumnOrderChange={(order) => console.log(order)}
-      onColumnPin={(key, pinned) => console.log(key, pinned)}
     />
   );`)}
       toolbar={
-        selectedKeys.length > 0 ? (
-          <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 text-sm">
-            <span className="font-medium">{selectedKeys.length} selected</span>
-            <Separator orientation="vertical" className="h-4" />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-6 text-xs"
-              onClick={() => setSelectedKeys([])}
-            >
-              Deselect all
-            </Button>
-          </div>
-        ) : undefined
+        <div className="flex items-center gap-2 flex-wrap">
+          {selectedKeys.length > 0 && (
+            <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 text-sm">
+              <span className="font-medium">
+                {selectedKeys.length} selected
+              </span>
+              <Separator orientation="vertical" className="h-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs"
+                onClick={() => setSelectedKeys([])}
+              >
+                Deselect all
+              </Button>
+            </div>
+          )}
+          {(rowPinning.top.length > 0 || rowPinning.bottom.length > 0) && (
+            <div className="flex items-center gap-2 rounded-lg border bg-muted/50 px-3 py-2 text-sm">
+              {rowPinning.top.length > 0 && (
+                <Badge variant="secondary" className="text-[10px]">
+                  {rowPinning.top.length} pinned top
+                </Badge>
+              )}
+              {rowPinning.bottom.length > 0 && (
+                <Badge variant="secondary" className="text-[10px]">
+                  {rowPinning.bottom.length} pinned bottom
+                </Badge>
+              )}
+              <Separator orientation="vertical" className="h-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 text-xs"
+                onClick={() => setRowPinning({ top: [], bottom: [] })}
+              >
+                Unpin all
+              </Button>
+            </div>
+          )}
+        </div>
       }
     >
+      <div className="rounded-lg border bg-muted/30 p-3 mb-2">
+        <p className="text-xs text-muted-foreground">
+          <strong>Try it:</strong> Right-click cells for copy & row pinning.
+          Right-click headers for sort, filter, pin, hide. Right-click a
+          "Monitor" cell and select "Edit" to edit inline. Drag headers to
+          reorder. Drag header edges to resize.
+        </p>
+      </div>
       <div className="rounded-lg border overflow-hidden">
         <BoltTable<Monitor>
           columns={columns}
@@ -1400,10 +1537,1014 @@ function CombinedExample() {
               <ExpandedRowContent record={record} />
             ),
           }}
+          rowPinning={rowPinning}
+          onRowPin={handleRowPin}
+          keepPinnedRowsAcrossPages
+          rowClassName={rowClassName}
+          onEdit={(value, _record, dataIndex, rowIndex) => {
+            setData((prev) =>
+              prev.map((r, i) =>
+                i === rowIndex
+                  ? { ...r, [dataIndex]: value as string }
+                  : r,
+              ),
+            );
+          }}
           classNames={{
             header: "text-xs font-medium text-muted-foreground",
             cell: "text-sm",
             expandedRow: "bg-muted/30",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+            pinnedRowBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function RadioSelectionExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 20), []);
+  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+
+  return (
+    <ExampleSection
+      id="example-radio-selection"
+      title="Radio Selection (Single Select)"
+      description='Radio buttons allow selecting exactly one row at a time. Set type to "radio" in rowSelection config.'
+      code={fullCode(`  const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      rowSelection={{
+        type: "radio",
+        selectedRowKeys: selectedKeys,
+        onChange: (keys) => setSelectedKeys(keys),
+      }}
+    />
+  );`)}
+      toolbar={
+        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <span>
+            {selectedKeys.length > 0
+              ? `Selected: ${selectedKeys[0]}`
+              : "No row selected"}
+          </span>
+          {selectedKeys.length > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs"
+              onClick={() => setSelectedKeys([])}
+            >
+              Clear
+            </Button>
+          )}
+        </div>
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          pagination={{ pageSize: 10 }}
+          rowSelection={{
+            type: "radio",
+            selectedRowKeys: selectedKeys,
+            onChange: (keys) => setSelectedKeys(keys),
+          }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function NestedColumnsExample() {
+  const nestedColumns = useMemo(
+    (): ColumnType<Monitor>[] => [
+      {
+        key: "name",
+        dataIndex: "name",
+        title: "Monitor",
+        width: 180,
+        sortable: true,
+        render: (_: unknown, record: Monitor) => (
+          <div className="flex flex-col">
+            <span className="text-sm font-medium text-foreground truncate">
+              {record.name}
+            </span>
+            <span className="text-xs text-muted-foreground truncate">
+              {record.url}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: "healthGroup",
+        title: "Health",
+        children: [
+          {
+            key: "status",
+            dataIndex: "status",
+            title: "Status",
+            width: 120,
+            sortable: true,
+            render: (value: unknown) => (
+              <StatusCell status={value as Monitor["status"]} />
+            ),
+          },
+          {
+            key: "uptime",
+            dataIndex: "uptime",
+            title: "Uptime",
+            width: 100,
+            sortable: true,
+            render: (value: unknown) => (
+              <UptimeBadge value={value as number} />
+            ),
+          },
+          {
+            key: "latency",
+            dataIndex: "latency",
+            title: "Latency",
+            width: 160,
+            sortable: true,
+            render: (value: unknown) => <LatencyBar value={value as number} />,
+          },
+        ],
+      },
+      {
+        key: "configGroup",
+        title: "Configuration",
+        children: [
+          {
+            key: "region",
+            dataIndex: "region",
+            title: "Region",
+            width: 140,
+            render: (value: unknown) => (
+              <span className="text-xs font-mono text-muted-foreground">
+                {String(value)}
+              </span>
+            ),
+          },
+          {
+            key: "method",
+            dataIndex: "method",
+            title: "Method",
+            width: 90,
+            render: (value: unknown) => (
+              <Badge
+                variant="secondary"
+                className="font-mono text-[10px] px-1.5 py-0"
+              >
+                {String(value)}
+              </Badge>
+            ),
+          },
+          {
+            key: "interval",
+            dataIndex: "interval",
+            title: "Interval",
+            width: 90,
+            render: (value: unknown) => (
+              <span className="text-xs text-muted-foreground">
+                {value as number}s
+              </span>
+            ),
+          },
+        ],
+      },
+      {
+        key: "lastChecked",
+        dataIndex: "lastChecked",
+        title: "Last Checked",
+        width: 120,
+        sortable: true,
+        render: (value: unknown) => (
+          <span className="text-xs text-muted-foreground">
+            {timeAgo(value as string)}
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
+  const data = useMemo(() => allData.slice(0, 20), []);
+
+  return (
+    <ExampleSection
+      id="example-nested-columns"
+      title="Nested / Grouped Columns"
+      description='Group related columns under a shared header. "Health" and "Configuration" span multiple sub-columns. The header renders two rows.'
+      code={`${CODE_IMPORTS}\n\nconst columns: ColumnType<Monitor>[] = [
+  { key: "name", dataIndex: "name", title: "Monitor", width: 180 },
+  {
+    key: "healthGroup",
+    title: "Health",
+    children: [
+      { key: "status",  dataIndex: "status",  title: "Status",  width: 120 },
+      { key: "uptime",  dataIndex: "uptime",  title: "Uptime",  width: 100 },
+      { key: "latency", dataIndex: "latency", title: "Latency", width: 160 },
+    ],
+  },
+  {
+    key: "configGroup",
+    title: "Configuration",
+    children: [
+      { key: "region",   dataIndex: "region",   title: "Region",   width: 140 },
+      { key: "method",   dataIndex: "method",   title: "Method",   width: 90  },
+      { key: "interval", dataIndex: "interval", title: "Interval", width: 90  },
+    ],
+  },
+  { key: "lastChecked", dataIndex: "lastChecked", title: "Last Checked", width: 120 },
+];
+
+${CODE_DATA}
+
+export default function Example() {
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+    />
+  );
+}`}
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={nestedColumns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          pagination={{ pageSize: 10 }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function CustomContextMenuExample() {
+  const columns = useMemo(
+    (): ColumnType<Monitor>[] =>
+      buildColumns().map((col) => {
+        if (col.key === "name") {
+          return {
+            ...col,
+            copy: true,
+            columnHeaderContextMenuItems: [
+              {
+                key: "export-col",
+                label: "Export Column",
+                icon: (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                ),
+                onClick: (columnKey: string) => alert(`Export column: ${columnKey}`),
+              },
+            ],
+            columnCellContextMenuItems: [
+              {
+                key: "view-details",
+                label: "View Details",
+                icon: (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                ),
+                onClick: (_columnKey: string, record: Monitor) =>
+                  alert(`Details for: ${record.name}`),
+              },
+              {
+                key: "delete-row",
+                label: "Delete Row",
+                danger: true,
+                icon: (
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                ),
+                onClick: (_columnKey: string, record: Monitor) =>
+                  alert(`Delete: ${record.name}`),
+              },
+            ],
+          };
+        }
+        return col;
+      }),
+    [],
+  );
+  const data = useMemo(() => allData.slice(0, 20), []);
+
+  return (
+    <ExampleSection
+      id="example-context-menus"
+      title="Custom Context Menu Items"
+      description='Add custom actions to header and cell context menus. Right-click the "Monitor" header to see "Export Column". Right-click a Monitor cell to see "View Details" and "Delete Row" (red/danger).'
+      code={fullCode(`  const columns = buildColumns().map((col) => {
+    if (col.key === "name") {
+      return {
+        ...col,
+        columnHeaderContextMenuItems: [
+          {
+            key: "export-col",
+            label: "Export Column",
+            icon: <DownloadIcon size={12} />,
+            onClick: (columnKey) => exportColumn(columnKey),
+          },
+        ],
+        columnCellContextMenuItems: [
+          {
+            key: "view-details",
+            label: "View Details",
+            icon: <InfoIcon size={12} />,
+            onClick: (columnKey, record) => viewDetails(record),
+          },
+          {
+            key: "delete-row",
+            label: "Delete Row",
+            danger: true,
+            onClick: (columnKey, record) => deleteRow(record),
+          },
+        ],
+      };
+    }
+    return col;
+  });
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      columnContextMenuItems={[
+        {
+          key: "log",
+          label: "Log Column Key",
+          onClick: (key) => console.log(key),
+        },
+      ]}
+    />
+  );`)}
+    >
+      <div className="rounded-lg border bg-muted/30 p-3 mb-2">
+        <p className="text-xs text-muted-foreground">
+          <strong>Try it:</strong> Right-click the "Monitor" column header for a custom "Export Column" item. Right-click a "Monitor" cell for "View Details" and "Delete Row" actions.
+        </p>
+      </div>
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          pagination={{ pageSize: 10 }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function LayoutLoadingExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const [layoutLoading, setLayoutLoading] = useState(true);
+  const [data, setData] = useState<Monitor[]>([]);
+
+  const simulateLoad = useCallback(() => {
+    setLayoutLoading(true);
+    setData([]);
+    setTimeout(() => {
+      setData(allData.slice(0, 20));
+      setLayoutLoading(false);
+    }, 2500);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setData(allData.slice(0, 20));
+      setLayoutLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <ExampleSection
+      id="example-layout-loading"
+      title="Layout Loading (Full Skeleton)"
+      description="Shows a full shimmer skeleton including headers and rows — use when column widths are unknown at mount time. Differs from isLoading which shows real headers."
+      code={fullCode(`  const [layoutLoading, setLayoutLoading] = useState(true);
+  const [data, setData] = useState<Monitor[]>([]);
+
+  useEffect(() => {
+    fetchData().then((rows) => {
+      setData(rows);
+      setLayoutLoading(false);
+    });
+  }, []);
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      layoutLoading={layoutLoading}
+      pagination={{ pageSize: 10 }}
+    />
+  );`)}
+      toolbar={
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={simulateLoad}
+          disabled={layoutLoading}
+        >
+          {layoutLoading ? "Loading layout..." : "Reload Layout"}
+        </Button>
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          layoutLoading={layoutLoading}
+          pagination={{ pageSize: 10 }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function CustomIconsExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 20), []);
+
+  const customIcons = useMemo(
+    () => ({
+      gripVertical: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <circle cx="8" cy="4" r="2" /><circle cx="16" cy="4" r="2" />
+          <circle cx="8" cy="12" r="2" /><circle cx="16" cy="12" r="2" />
+          <circle cx="8" cy="20" r="2" /><circle cx="16" cy="20" r="2" />
+        </svg>
+      ),
+      sortAsc: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 19V5" /><path d="m5 12 7-7 7 7" />
+        </svg>
+      ),
+      sortDesc: (
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 5v14" /><path d="m19 12-7 7-7-7" />
+        </svg>
+      ),
+    }),
+    [],
+  );
+
+  return (
+    <ExampleSection
+      id="example-custom-icons"
+      title="Custom Icons"
+      description="Override any built-in icon via the icons prop. This example replaces the drag grip and sort icons with custom SVGs. Available keys: gripVertical, sortAsc, sortDesc, filter, filterClear, pin, pinOff, eyeOff, chevronDown, chevronLeft, chevronRight, chevronsLeft, chevronsRight, copy."
+      code={fullCode(`  const customIcons = {
+    gripVertical: <MyGripIcon size={12} />,
+    sortAsc: <MySortUpIcon size={12} />,
+    sortDesc: <MySortDownIcon size={12} />,
+  };
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      icons={customIcons}
+      pagination={{ pageSize: 10 }}
+    />
+  );`)}
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          icons={customIcons}
+          pagination={{ pageSize: 10 }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function RowStyleExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 30), []);
+
+  const rowClassName = useCallback(
+    (record: Monitor) => {
+      if (record.status === "down") return "bg-red-50 dark:bg-red-950/20";
+      if (record.status === "degraded")
+        return "bg-yellow-50 dark:bg-yellow-950/20";
+      return "";
+    },
+    [],
+  );
+
+  const rowStyle = useCallback(
+    (_record: Monitor) => {
+      return {} as React.CSSProperties;
+    },
+    [],
+  );
+
+  return (
+    <ExampleSection
+      id="example-row-styling"
+      title="Conditional Row Styling"
+      description='Use rowClassName and rowStyle to conditionally style rows. Here, "down" rows get a red background and "degraded" rows get a yellow background.'
+      code={fullCode(`  const rowClassName = (record: Monitor) => {
+    if (record.status === "down") return "bg-red-50 dark:bg-red-950/20";
+    if (record.status === "degraded") return "bg-yellow-50 dark:bg-yellow-950/20";
+    return "";
+  };
+
+  const rowStyle = (record: Monitor) => {
+    return {};
+  };
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      rowClassName={rowClassName}
+      rowStyle={rowStyle}
+    />
+  );`)}
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          pagination={{ pageSize: 10 }}
+          rowClassName={rowClassName}
+          rowStyle={rowStyle}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function AutoHeightExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const fewRows = useMemo(() => allData.slice(0, 4), []);
+  const manyRows = useMemo(() => allData.slice(0, 50), []);
+
+  return (
+    <ExampleSection
+      id="example-auto-height"
+      title="Auto Height vs Fixed Height"
+      description='autoHeight=true (default): table shrinks to fit its content, capped at 10 rows. autoHeight=false: table fills its parent container — required for infinite scroll.'
+      code={fullCode(`  // Auto height — shrinks to fit content
+  <BoltTable columns={columns} data={data} autoHeight={true} />
+
+  // Fixed height — fills a 400px container
+  <div style={{ height: 400 }}>
+    <BoltTable columns={columns} data={data} autoHeight={false} />
+  </div>`)}
+    >
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">
+            autoHeight=true (4 rows — table shrinks)
+          </p>
+          <div className="rounded-lg border overflow-hidden">
+            <BoltTable<Monitor>
+              columns={columns}
+              data={fewRows}
+              rowKey="id"
+              rowHeight={48}
+              autoHeight={true}
+              pagination={false}
+              classNames={{
+                header: "text-xs font-medium text-muted-foreground",
+                cell: "text-sm",
+              }}
+              styles={{
+                rowHover: { backgroundColor: "var(--color-muted)" },
+                pinnedBg: "var(--color-background)",
+              }}
+            />
+          </div>
+        </div>
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground">
+            autoHeight=false (50 rows — fixed 400px viewport, scrollable)
+          </p>
+          <div className="rounded-lg border overflow-hidden h-[400px]">
+            <BoltTable<Monitor>
+              columns={columns}
+              data={manyRows}
+              rowKey="id"
+              rowHeight={48}
+              autoHeight={false}
+              pagination={false}
+              classNames={{
+                header: "text-xs font-medium text-muted-foreground",
+                cell: "text-sm",
+              }}
+              styles={{
+                rowHover: { backgroundColor: "var(--color-muted)" },
+                pinnedBg: "var(--color-background)",
+              }}
+            />
+          </div>
+        </div>
+      </div>
+    </ExampleSection>
+  );
+}
+
+function ColumnHidingExample() {
+  const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(
+    new Set(["interval", "tags"]),
+  );
+
+  const columns = useMemo(
+    () =>
+      buildColumns().map((col) => ({
+        ...col,
+        hidden: hiddenColumns.has(col.key),
+      })),
+    [hiddenColumns],
+  );
+
+  const allColumnKeys = useMemo(
+    () => buildColumns().map((c) => ({ key: c.key, title: c.title })),
+    [],
+  );
+
+  const data = useMemo(() => allData.slice(0, 20), []);
+
+  return (
+    <ExampleSection
+      id="example-column-hiding"
+      title="Column Hiding"
+      description='Hide/show columns via the right-click context menu ("Hide Column") or programmatically with the hidden prop. Pinned columns cannot be hidden. Use onColumnHide to persist changes.'
+      code={fullCode(`  const [hiddenColumns, setHiddenColumns] = useState(
+    new Set(["interval", "tags"])
+  );
+
+  const columns = buildColumns().map((col) => ({
+    ...col,
+    hidden: hiddenColumns.has(col.key),
+  }));
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      onColumnHide={(key, hidden) => {
+        setHiddenColumns((prev) => {
+          const next = new Set(prev);
+          hidden ? next.add(key) : next.delete(key);
+          return next;
+        });
+      }}
+    />
+  );`)}
+      toolbar={
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-muted-foreground font-medium">
+            Toggle columns:
+          </span>
+          {allColumnKeys.map(({ key, title }) => (
+            <button
+              key={key}
+              className={`px-2 py-1 text-[10px] rounded border transition-colors ${
+                hiddenColumns.has(key)
+                  ? "bg-muted text-muted-foreground border-border line-through"
+                  : "bg-background text-foreground border-border"
+              }`}
+              onClick={() =>
+                setHiddenColumns((prev) => {
+                  const next = new Set(prev);
+                  next.has(key) ? next.delete(key) : next.add(key);
+                  return next;
+                })
+              }
+            >
+              {typeof title === "string" ? title : key}
+            </button>
+          ))}
+        </div>
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          pagination={{ pageSize: 10 }}
+          onColumnHide={(key, hidden) => {
+            setHiddenColumns((prev) => {
+              const next = new Set(prev);
+              hidden ? next.add(key) : next.delete(key);
+              return next;
+            });
+          }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function EditableCellsExample() {
+  const columns = useMemo(
+    (): ColumnType<Monitor>[] => [
+      {
+        key: "name",
+        dataIndex: "name",
+        title: "Monitor",
+        width: 180,
+        editable: true,
+        sortable: true,
+      },
+      {
+        key: "status",
+        dataIndex: "status",
+        title: "Status",
+        width: 120,
+        editable: true,
+        render: (value: unknown) => (
+          <StatusCell status={value as Monitor["status"]} />
+        ),
+      },
+      {
+        key: "region",
+        dataIndex: "region",
+        title: "Region",
+        width: 140,
+        editable: true,
+      },
+      {
+        key: "latency",
+        dataIndex: "latency",
+        title: "Latency",
+        width: 100,
+        editable: true,
+      },
+      {
+        key: "uptime",
+        dataIndex: "uptime",
+        title: "Uptime",
+        width: 100,
+        editable: true,
+      },
+      {
+        key: "method",
+        dataIndex: "method",
+        title: "Method",
+        width: 90,
+        editable: true,
+      },
+      {
+        key: "interval",
+        dataIndex: "interval",
+        title: "Interval",
+        width: 90,
+        editable: true,
+      },
+    ],
+    [],
+  );
+  const [data, setData] = useState<Monitor[]>(() => allData.slice(0, 15));
+  const [lastEdit, setLastEdit] = useState<string | null>(null);
+
+  return (
+    <ExampleSection
+      id="example-editable"
+      title="Editable Cells"
+      description='Right-click any editable cell and select "Edit" to edit inline. Press Enter or click away to commit, Escape to cancel. Columns with a custom render function (like "Status") are not editable even if editable is set — handle editing in your render instead.'
+      code={fullCode(`  const [data, setData] = useState<Monitor[]>(initialData);
+
+  const columns: ColumnType<Monitor>[] = [
+    { key: "name",   dataIndex: "name",   title: "Monitor", editable: true, width: 180 },
+    { key: "region", dataIndex: "region", title: "Region",  editable: true, width: 140 },
+    {
+      key: "status",
+      dataIndex: "status",
+      title: "Status",
+      editable: true,      // ignored — custom render takes precedence
+      render: (value) => <StatusBadge status={value} />,
+    },
+  ];
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      onEdit={(value, record, dataIndex, rowIndex) => {
+        setData(prev =>
+          prev.map((r, i) =>
+            i === rowIndex ? { ...r, [dataIndex]: value } : r
+          )
+        );
+      }}
+    />
+  );`)}
+      toolbar={
+        lastEdit ? (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <span>Last edit: {lastEdit}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 text-xs"
+              onClick={() => {
+                setData(allData.slice(0, 15));
+                setLastEdit(null);
+              }}
+            >
+              Reset data
+            </Button>
+          </div>
+        ) : undefined
+      }
+    >
+      <div className="rounded-lg border bg-muted/30 p-3 mb-2">
+        <p className="text-xs text-muted-foreground">
+          <strong>Try it:</strong> Right-click any cell in "Monitor", "Region",
+          "Latency", "Uptime", "Method", or "Interval" and select "Edit". "Status"
+          has a custom render so editing is skipped there.
+        </p>
+      </div>
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          pagination={{ pageSize: 10 }}
+          onEdit={(value, _record, dataIndex, rowIndex) => {
+            setData((prev) =>
+              prev.map((r, i) =>
+                i === rowIndex
+                  ? { ...r, [dataIndex]: value as string }
+                  : r,
+              ),
+            );
+            setLastEdit(
+              `Row ${rowIndex + 1}, column "${dataIndex}" → "${String(value)}"`,
+            );
+          }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function DisabledFiltersExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 20), []);
+  const [filtersDisabled, setFiltersDisabled] = useState(true);
+
+  return (
+    <ExampleSection
+      id="example-disabled-filters"
+      title="Disabled Filters"
+      description='Set disabledFilters={true} to remove the filter option from all header context menus. Useful when you want sorting and pinning but not filtering.'
+      code={fullCode(`  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      disabledFilters={true}
+    />
+  );`)}
+      toolbar={
+        <div className="flex items-center gap-2">
+          <label className="flex items-center gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              checked={filtersDisabled}
+              onChange={(e) => setFiltersDisabled(e.target.checked)}
+              className="accent-primary"
+              style={{ colorScheme: "light dark" }}
+            />
+            <span className="text-xs text-muted-foreground">
+              disabledFilters={filtersDisabled ? "true" : "false"}
+            </span>
+          </label>
+          <span className="text-xs text-muted-foreground">
+            (right-click a header to see the difference)
+          </span>
+        </div>
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          pagination={{ pageSize: 10 }}
+          disabledFilters={filtersDisabled}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
           }}
           styles={{
             rowHover: { backgroundColor: "var(--color-muted)" },
@@ -1528,26 +2669,47 @@ export default function App() {
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            {[
-              "Virtualized",
-              "Drag & Reorder",
-              "Column Pinning",
-              "Column Resize",
-              "Sorting",
-              "Filtering",
-              "Pagination",
-              "Row Selection",
-              "Expandable Rows",
-              "Infinite Scroll",
-              "Shimmer Loading",
-              "Context Menu",
-              "Custom Icons",
-              "Auto Height",
-              "Theme-Agnostic",
-            ].map((f) => (
-              <Badge key={f} variant="secondary" className="text-xs">
-                {f}
-              </Badge>
+            {([
+              ["Virtualized", "example-virtualized"],
+              ["Drag & Reorder", "example-basic"],
+              ["Column Pinning", "example-column-pinning"],
+              ["Column Resize", "example-basic"],
+              ["Column Hiding", "example-column-hiding"],
+              ["Sorting", "example-basic"],
+              ["Filtering", "example-basic"],
+              ["Pagination", "example-pagination"],
+              ["Row Selection", "example-selection"],
+              ["Expandable Rows", "example-expandable"],
+              ["Row Pinning", "example-row-pinning"],
+              ["Infinite Scroll", "example-infinite-scroll"],
+              ["Shimmer Loading", "example-loading"],
+              ["Layout Loading", "example-layout-loading"],
+              ["Context Menus", "example-context-menus"],
+              ["Custom Icons", "example-custom-icons"],
+              ["Nested Columns", "example-nested-columns"],
+              ["Auto Height", "example-auto-height"],
+              ["Row Styling", "example-row-styling"],
+              ["Editable Cells", "example-editable"],
+              ["Cell Copy", "example-cell-copy"],
+              ["Mobile Touch", "example-cell-copy"],
+              ["Theme-Agnostic", "example-styling"],
+            ] as [string, string][]).map(([label, anchor]) => (
+              <a
+                key={label}
+                href={`#${anchor}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  const el = document.getElementById(anchor);
+                  if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+                }}
+              >
+                <Badge
+                  variant="secondary"
+                  className="text-xs cursor-pointer hover:bg-accent hover:text-accent-foreground transition-colors"
+                >
+                  {label}
+                </Badge>
+              </a>
             ))}
           </div>
           <div className="pt-2">
@@ -1570,14 +2732,24 @@ export default function App() {
             <BasicExample />
             <PaginationExample />
             <SelectionExample />
+            <RadioSelectionExample />
             <ExpandableExample />
             <PinningExample />
             <RowPinningExample />
+            <NestedColumnsExample />
             <CellCopyExample />
+            <CustomContextMenuExample />
             <LoadingExample />
+            <LayoutLoadingExample />
             <InfiniteScrollExample />
             <VirtualizationExample />
             <StylingExample />
+            <EditableCellsExample />
+            <CustomIconsExample />
+            <RowStyleExample />
+            <AutoHeightExample />
+            <ColumnHidingExample />
+            <DisabledFiltersExample />
             <EmptyStateExample />
             <ServerSideExample />
             <CombinedExample />
