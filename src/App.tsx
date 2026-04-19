@@ -1301,7 +1301,9 @@ function ServerSideExample() {
   );
 
   useEffect(() => {
+    const abortController = new AbortController();
     fetchData(page, pageSize, sortKey, sortDir, filters);
+    return () => abortController.abort();
   }, [page, pageSize, sortKey, sortDir, filters, fetchData]);
 
   return (
@@ -2202,7 +2204,7 @@ function RowStyleExample() {
     return "";
   }, []);
 
-  const rowStyle = useCallback((_record: Monitor) => {
+  const rowStyle = useCallback(() => {
     return {} as React.CSSProperties;
   }, []);
 
@@ -2937,145 +2939,6 @@ function HorizontalVirtualizationExample() {
           rowHeight={48}
           autoHeight={false}
           enableColumnVirtualization={virtualize}
-          pagination={{ pageSize: 10 }}
-          classNames={{
-            header: "text-xs font-medium text-muted-foreground",
-            cell: "text-sm",
-          }}
-          styles={{
-            rowHover: { backgroundColor: "var(--color-muted)" },
-            pinnedBg: "var(--color-background)",
-          }}
-        />
-      </div>
-    </ExampleSection>
-  );
-}
-
-function DynamicRowHeightExample() {
-  const columns = useMemo(
-    (): ColumnType<Monitor>[] => [
-      {
-        key: "name",
-        dataIndex: "name",
-        title: "Monitor",
-        width: 200,
-        sortable: true,
-        render: (_: unknown, record: Monitor) => (
-          <div className="py-1">
-            <span className="text-sm font-medium text-foreground">
-              {record.name}
-            </span>
-            <div className="text-xs text-muted-foreground mt-0.5">
-              {record.url}
-            </div>
-            {record.tags.length > 0 && (
-              <div className="flex gap-1 flex-wrap mt-1">
-                {record.tags.map((t) => (
-                  <Badge
-                    key={t}
-                    variant="outline"
-                    className="text-[10px] px-1.5 py-0"
-                  >
-                    {t}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-        ),
-      },
-      {
-        key: "status",
-        dataIndex: "status",
-        title: "Status",
-        width: 120,
-        render: (value: unknown) => (
-          <StatusCell status={value as Monitor["status"]} />
-        ),
-      },
-      {
-        key: "description",
-        dataIndex: "region",
-        title: "Description",
-        width: 280,
-        render: (_: unknown, record: Monitor) => (
-          <div className="py-1 text-xs text-muted-foreground leading-relaxed">
-            {record.name} is a {record.method} endpoint in{" "}
-            <strong>{record.region}</strong> with
-            {record.uptime >= 99.9
-              ? " excellent"
-              : record.uptime >= 99
-                ? " good"
-                : " degraded"}{" "}
-            uptime ({record.uptime.toFixed(2)}%) and{" "}
-            {formatLatency(record.latency)} average latency.
-            {record.status === "down" && " Currently experiencing an outage."}
-            {record.status === "degraded" &&
-              " Performance is below normal thresholds."}
-            Checked every {record.interval}s.
-          </div>
-        ),
-      },
-      {
-        key: "latency",
-        dataIndex: "latency",
-        title: "Latency",
-        width: 160,
-        render: (value: unknown) => <LatencyBar value={value as number} />,
-      },
-      {
-        key: "uptime",
-        dataIndex: "uptime",
-        title: "Uptime",
-        width: 100,
-        render: (value: unknown) => <UptimeBadge value={value as number} />,
-      },
-    ],
-    [],
-  );
-
-  const data = useMemo(() => allData.slice(0, 30), []);
-  const [dynamic, setDynamic] = useState(true);
-
-  return (
-    <ExampleSection
-      id="example-dynamic-row-height"
-      title="Dynamic Row Heights"
-      description="Rows auto-measure their content height using ResizeObserver. Multi-line text and wrapped badges cause rows to grow taller. Toggle to compare with fixed heights."
-      code={fullCode(`  return (
-    <BoltTable<Monitor>
-      columns={columns}
-      data={data}
-      rowKey="id"
-      enableDynamicRowHeight={true}
-      rowHeight={40}   // minimum / estimated height
-      pagination={{ pageSize: 10 }}
-    />
-  );`)}
-      toolbar={
-        <label className="flex items-center gap-2 text-sm cursor-pointer">
-          <input
-            type="checkbox"
-            checked={dynamic}
-            onChange={(e) => setDynamic(e.target.checked)}
-            className="accent-primary"
-            style={{ colorScheme: "light dark" }}
-          />
-          <span className="text-xs text-muted-foreground">
-            enableDynamicRowHeight={dynamic ? "true" : "false"}
-          </span>
-        </label>
-      }
-    >
-      <div className="rounded-lg border overflow-hidden h-[480px]">
-        <BoltTable<Monitor>
-          columns={columns}
-          data={data}
-          rowKey="id"
-          rowHeight={40}
-          autoHeight={false}
-          enableDynamicRowHeight={dynamic}
           pagination={{ pageSize: 10 }}
           classNames={{
             header: "text-xs font-medium text-muted-foreground",
