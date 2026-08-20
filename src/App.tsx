@@ -1,3 +1,5 @@
+import config from "../bolt-table.config";
+
 import {
   useState,
   useMemo,
@@ -355,7 +357,6 @@ function ExampleSection({
 // ─── Shared code preamble for "View Code" snippets ──────────────────────────
 
 const CODE_IMPORTS = `import { BoltTable, ColumnType } from "bolt-table";`;
-
 const CODE_TYPES = `interface Monitor {
   id: string;
   name: string;
@@ -410,6 +411,8 @@ function BasicExample() {
       rowKey="id"
       rowHeight={48}
       pagination={{ pageSize: 10 }}
+      aiMode
+      aiConfig={config.ai}
     />
   );`)}
     >
@@ -418,6 +421,10 @@ function BasicExample() {
           columns={columns}
           autoHeight
           data={data}
+          aiMode
+          aiConfig={config.ai}
+          hideGlobalSearch
+          showColumnSettings={false}
           rowKey="id"
           pagination={{ pageSize: 10 }}
           rowHeight={48}
@@ -3171,6 +3178,524 @@ function RowClickExample() {
   );
 }
 
+function RowDragExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const [data, setData] = useState(() => allData.slice(0, 10));
+
+  return (
+    <ExampleSection
+      id="example-row-drag"
+      title="Row Drag & Drop Reordering"
+      description="Enable row reordering with a drag grip handle on each row. Users can drag rows to new positions. A blue indicator line shows where the row will land."
+      code={fullCode(`  const [data, setData] = useState<Monitor[]>(initialData);
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      rowDragEnabled
+      onRowReorder={(fromIndex, toIndex) => {
+        setData(prev => {
+          const next = [...prev];
+          const [moved] = next.splice(fromIndex, 1);
+          next.splice(toIndex, 0, moved);
+          return next;
+        });
+      }}
+      pagination={{ pageSize: 10 }}
+    />
+  );`)}
+      toolbar={
+        <p className="text-xs text-muted-foreground">
+          Drag any row by its grip handle on the left and drop it onto another
+          row to reorder.
+        </p>
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          autoHeight
+          rowDragEnabled
+          onRowReorder={(fromIndex: number, toIndex: number) => {
+            setData((prev) => {
+              const next = [...prev];
+              const [moved] = next.splice(fromIndex, 1);
+              next.splice(toIndex, 0, moved);
+              return next;
+            });
+          }}
+          pagination={{ pageSize: 10 }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function ColumnAutoFitExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 15), []);
+  const [lastFit, setLastFit] = useState<{
+    key: string;
+    width: number;
+  } | null>(null);
+
+  return (
+    <ExampleSection
+      id="example-column-autofit"
+      title="Column Auto-Fit Width"
+      description="Double-click the resize handle (right edge) of any column header to automatically fit the column width to its content. The table measures the header and all visible cells, then sets the optimal width (clamped between 60px and 800px)."
+      code={fullCode(`  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      onColumnResize={(columnKey, newWidth) => {
+        console.log(\`Column \${columnKey} auto-fitted to \${newWidth}px\`);
+      }}
+    />
+  );`)}
+      toolbar={
+        lastFit ? (
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            Last auto-fit:{" "}
+            <Badge variant="secondary" className="text-[10px]">
+              {lastFit.key}
+            </Badge>
+            <span>→ {lastFit.width}px</span>
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground">
+            Double-click the right edge of any column header to auto-fit its
+            width.
+          </p>
+        )
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          autoHeight
+          pagination={{ pageSize: 10 }}
+          onColumnResize={(columnKey: string, newWidth: number) => {
+            setLastFit({ key: columnKey, width: newWidth });
+          }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function AIModeExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 30), []);
+
+  return (
+    <ExampleSection
+      id="example-ai-mode"
+      title="AI Mode"
+      description='Enable the AI assistant to interact with the table using natural language. The AI can filter, sort, style, resize, reorder, pin columns, and navigate pages. Try asking "show only active monitors" or "sort by latency".'
+      code={fullCode(`  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      aiMode
+      aiConfig={{
+        provider: 'openai',
+        apiKey: 'sk-...',
+        model: 'gpt-4o-mini',
+      }}
+    />
+  );`)}
+      toolbar={
+        <p className="text-xs text-muted-foreground">
+          Type a natural-language query in the AI input bar above the table.
+          Supports OpenAI, Anthropic, or a custom backend via{" "}
+          <code className="text-xs bg-muted px-1 rounded">onAIQuery</code>.
+        </p>
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          autoHeight
+          aiMode
+          aiConfig={config.ai}
+          pagination={{ pageSize: 10 }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function SafeRowKeysExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo((): Monitor[] => {
+    const base = allData.slice(0, 4);
+    return [
+      ...base,
+      { ...base[0], id: undefined as unknown as string, name: "Missing ID" },
+      {
+        ...base[1],
+        id: NaN as unknown as string,
+        name: "NaN ID",
+      },
+      { ...base[2], id: "" as string, name: "Empty String ID" },
+      { ...base[0], name: base[0].name + " (duplicate)" },
+    ];
+  }, []);
+
+  return (
+    <ExampleSection
+      id="example-safe-row-keys"
+      title="Safe Row Keys"
+      description="BoltTable handles edge cases in row keys automatically. If your rowKey field contains undefined, null, NaN, or empty strings, the table falls back to index-based keys. Duplicate IDs are also deduplicated — no crashes, no warnings."
+      code={fullCode(`  const data = [
+    { id: undefined, name: "Missing ID" },
+    { id: NaN,       name: "NaN ID" },
+    { id: "",        name: "Empty String ID" },
+    { id: "1",       name: "Alice" },
+    { id: "1",       name: "Alice (duplicate)" },  // same id
+  ];
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+    />
+  );`)}
+      toolbar={
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge variant="secondary" className="text-[10px]">
+            {data.length} rows
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            Includes undefined, NaN, empty string, and duplicate IDs — all
+            handled automatically
+          </span>
+        </div>
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          autoHeight
+          pagination={{ pageSize: 10 }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function ConditionalFormattingExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 30), []);
+
+  return (
+    <ExampleSection
+      id="example-conditional-formatting"
+      title="Conditional Formatting"
+      description="Apply styles to cells or entire rows based on data values using declarative rules. Cell-level rules target specific columns; row-level rules highlight the entire row."
+      code={fullCode(`  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      conditionalFormatting={[
+        {
+          columns: ['latency'],
+          condition: (value) => (value as number) > 300,
+          style: { backgroundColor: '#fee2e2', color: '#dc2626' },
+        },
+        {
+          condition: (_, record) => (record as Monitor).status === 'down',
+          style: { backgroundColor: '#fef3c7' },
+          applyToRow: true,
+        },
+      ]}
+    />
+  );`)}
+      toolbar={
+        <div className="flex items-center gap-2 flex-wrap">
+          <Badge variant="secondary" className="text-[10px]">
+            {data.length} rows
+          </Badge>
+          <span className="text-xs text-muted-foreground">
+            High latency cells turn red, "down" rows get yellow background
+          </span>
+        </div>
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          autoHeight
+          pagination={{ pageSize: 10 }}
+          conditionalFormatting={[
+            {
+              columns: ["latency"],
+              condition: (value) => (value as number) > 300,
+              style: { backgroundColor: "#fee2e2", color: "#dc2626" },
+            },
+            {
+              condition: (_, record) =>
+                (record as Monitor).status === "down",
+              style: { backgroundColor: "#fef3c7" },
+              applyToRow: true,
+            },
+          ]}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function MultiSortExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 30), []);
+
+  return (
+    <ExampleSection
+      id="example-multi-sort"
+      title="Multi-Sort"
+      description="Hold Shift while clicking column headers to sort by multiple columns simultaneously. A sort badge shows the priority order."
+      code={fullCode(`  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      multiSort
+      onMultiSortChange={(sorts) => console.log('Sorts:', sorts)}
+    />
+  );`)}
+      toolbar={
+        <span className="text-xs text-muted-foreground">
+          Hold <kbd className="px-1.5 py-0.5 rounded border bg-muted text-[10px]">Shift</kbd> + click headers to multi-sort
+        </span>
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          autoHeight
+          pagination={{ pageSize: 10 }}
+          multiSort
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function StatusBarExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 30), []);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
+
+  return (
+    <ExampleSection
+      id="example-status-bar"
+      title="Status Bar"
+      description="Show a status bar at the bottom of the table with row counts, filtered count, and selection info. Provide a custom renderer for full control."
+      code={fullCode(`  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      showStatusBar
+      rowSelection={{
+        type: 'checkbox',
+        selectedRowKeys,
+        onChange: (keys) => setSelectedRowKeys(keys),
+      }}
+    />
+  );`)}
+      toolbar={
+        <span className="text-xs text-muted-foreground">
+          Select rows and watch the status bar update
+        </span>
+      }
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          autoHeight
+          pagination={{ pageSize: 10 }}
+          showStatusBar
+          rowSelection={{
+            type: "checkbox",
+            selectedRowKeys,
+            onChange: (keys) => setSelectedRowKeys(keys as string[]),
+          }}
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
+function ToolbarCustomizationExample() {
+  const columns = useMemo(() => buildColumns(), []);
+  const data = useMemo(() => allData.slice(0, 20), []);
+
+  return (
+    <ExampleSection
+      id="example-toolbar-customization"
+      title="Toolbar Customization"
+      description="Inject custom content into the toolbar using toolbarContent (between search and settings) and toolbarRight (after all buttons)."
+      code={fullCode(`  return (
+    <BoltTable<Monitor>
+      columns={columns}
+      data={data}
+      rowKey="id"
+      rowHeight={48}
+      pagination={{ pageSize: 10 }}
+      toolbarContent={
+        <button style={{ fontSize: 12, padding: '4px 8px' }}>
+          Export CSV
+        </button>
+      }
+      toolbarRight={
+        <span style={{ fontSize: 11, opacity: 0.6 }}>
+          Last updated: 5 min ago
+        </span>
+      }
+    />
+  );`)}
+    >
+      <div className="rounded-lg border overflow-hidden">
+        <BoltTable<Monitor>
+          columns={columns}
+          data={data}
+          rowKey="id"
+          rowHeight={48}
+          autoHeight
+          pagination={{ pageSize: 10 }}
+          toolbarContent={
+            <button
+              style={{
+                fontSize: 12,
+                padding: "4px 8px",
+                borderRadius: 4,
+                border: "1px solid var(--color-border)",
+                background: "var(--color-muted)",
+              }}
+            >
+              Export CSV
+            </button>
+          }
+          toolbarRight={
+            <span style={{ fontSize: 11, opacity: 0.6 }}>
+              Last updated: 5 min ago
+            </span>
+          }
+          classNames={{
+            header: "text-xs font-medium text-muted-foreground",
+            cell: "text-sm",
+          }}
+          styles={{
+            rowHover: { backgroundColor: "var(--color-muted)" },
+            pinnedBg: "var(--color-background)",
+          }}
+        />
+      </div>
+    </ExampleSection>
+  );
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 export default function App() {
@@ -3323,6 +3848,10 @@ export default function App() {
                 ["Empty State", "example-empty-state"],
                 ["Disabled Filters", "example-disabled-filters"],
                 ["Server-Side", "example-server-side"],
+                ["Row Drag & Drop", "example-row-drag"],
+                ["Column Auto-Fit", "example-column-autofit"],
+                ["AI Mode", "example-ai-mode"],
+                ["Safe Row Keys", "example-safe-row-keys"],
               ] as [string, string][]
             ).map(([label, anchor]) => (
               <a
@@ -3390,6 +3919,14 @@ export default function App() {
             <DisabledFiltersExample />
             <EmptyStateExample />
             <ServerSideExample />
+            <RowDragExample />
+            <ColumnAutoFitExample />
+            <AIModeExample />
+            <ConditionalFormattingExample />
+            <MultiSortExample />
+            <StatusBarExample />
+            <ToolbarCustomizationExample />
+            <SafeRowKeysExample />
             <CombinedExample />
           </TabsContent>
 
@@ -5491,6 +6028,543 @@ const columns = buildColumns();`}</CodeBlock>
 
             <Separator />
 
+            {/* ── Conditional Formatting ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Conditional Formatting
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Apply styles to cells or entire rows based on data values using
+                declarative rules. Each rule specifies a{" "}
+                <code className="text-xs bg-muted px-1 rounded">condition</code>{" "}
+                function and the styles to apply when it matches.
+              </p>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Cell-level</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Target specific columns with the{" "}
+                    <code className="text-xs bg-muted px-1 rounded">columns</code>{" "}
+                    array. Only cells in those columns are styled.
+                  </p>
+                  <CodeBlock>{`<BoltTable
+  conditionalFormatting={[
+    {
+      columns: ['age'],
+      condition: (value) => value >= 65,
+      style: { backgroundColor: '#fef3c7', color: '#92400e' },
+    },
+  ]}
+/>`}</CodeBlock>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Row-level</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Set{" "}
+                    <code className="text-xs bg-muted px-1 rounded">
+                      applyToRow: true
+                    </code>{" "}
+                    to style the entire row instead of individual cells.
+                  </p>
+                  <CodeBlock>{`<BoltTable
+  conditionalFormatting={[
+    {
+      condition: (_, record) => record.status === 'overdue',
+      style: { backgroundColor: '#fee2e2' },
+      applyToRow: true,
+    },
+  ]}
+/>`}</CodeBlock>
+                </div>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Multi-Sort ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Multi-Sort</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Enable{" "}
+                <code className="text-xs bg-muted px-1 rounded">multiSort</code>{" "}
+                to let users sort by multiple columns simultaneously. Hold{" "}
+                <strong>Shift</strong> while clicking a column header to add it
+                to the sort stack.
+              </p>
+              <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={data}
+  multiSort
+  onMultiSortChange={(sorts) => {
+    // sorts: Array<{ columnKey: string, direction: 'asc' | 'desc' | null }>
+    console.log('Active sorts:', sorts);
+  }}
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Filter Types ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Filter Types
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Each column can specify a{" "}
+                <code className="text-xs bg-muted px-1 rounded">filterType</code>{" "}
+                to control the filter UI in the context menu.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="text-left px-4 py-2 font-medium">Type</th>
+                      <th className="text-left px-4 py-2 font-medium">UI</th>
+                      <th className="text-left px-4 py-2 font-medium">
+                        Best for
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-xs">
+                        "text"
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Text input (default)
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Strings, IDs, names
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-xs">
+                        "dateRange"
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        From / To date pickers
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Timestamps, dates
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-xs">
+                        "numberRange"
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Min / Max number inputs
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Amounts, ages, quantities
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <CodeBlock>{`const columns = [
+  { key: 'name',   dataIndex: 'name',   title: 'Name',   filterType: 'text' },
+  { key: 'amount', dataIndex: 'amount', title: 'Amount', filterType: 'numberRange' },
+  { key: 'date',   dataIndex: 'date',   title: 'Date',   filterType: 'dateRange' },
+];`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Row Grouping ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Row Grouping
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Group rows by a column value. Each group gets a collapsible
+                header row. Aggregation functions (sum, avg, count, min, max, or
+                custom) are computed per group.
+              </p>
+              <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={data}
+  rowGrouping={{
+    groupBy: 'department',
+    defaultCollapsed: false,
+    aggregations: {
+      salary: 'avg',
+      age: 'max',
+      name: 'count',
+    },
+    groupHeaderRender: (groupKey, value, rows, aggregates, collapsed) => (
+      <span>{value} ({rows.length} employees, avg salary: {aggregates.salary})</span>
+    ),
+  }}
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Tree Data ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Tree Data</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Display hierarchical data with expandable tree nodes. Rows with a{" "}
+                <code className="text-xs bg-muted px-1 rounded">children</code>{" "}
+                array (or custom key) are rendered as nested levels with
+                indentation.
+              </p>
+              <CodeBlock>{`const data = [
+  {
+    id: '1', name: 'Engineering',
+    children: [
+      { id: '1-1', name: 'Frontend' },
+      { id: '1-2', name: 'Backend' },
+    ],
+  },
+  { id: '2', name: 'Design' },
+];
+
+<BoltTable
+  columns={columns}
+  data={data}
+  rowKey="id"
+  treeData={{
+    childrenKey: 'children',
+    indentSize: 24,
+    defaultExpandAll: true,
+  }}
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Master-Detail ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Master-Detail
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Click a row to open a detail panel below the table. The panel
+                receives the clicked record and a close callback.
+              </p>
+              <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={data}
+  masterDetail={(record, close) => (
+    <div style={{ padding: 24 }}>
+      <h3>{record.name}</h3>
+      <p>{record.description}</p>
+      <button onClick={close}>Close</button>
+    </div>
+  )}
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Editable Cells ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Editable Cells
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Mark columns as{" "}
+                <code className="text-xs bg-muted px-1 rounded">
+                  editable: true
+                </code>{" "}
+                and provide an{" "}
+                <code className="text-xs bg-muted px-1 rounded">onEdit</code>{" "}
+                callback. Choose an editor type per column.
+              </p>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border rounded-lg overflow-hidden">
+                  <thead>
+                    <tr className="bg-muted/50">
+                      <th className="text-left px-4 py-2 font-medium">
+                        Editor Type
+                      </th>
+                      <th className="text-left px-4 py-2 font-medium">UI</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-xs">"text"</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Text input (default)
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-xs">"number"</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Number input
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-xs">"select"</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Dropdown (requires editorOptions)
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-xs">"date"</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Date picker
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono text-xs">"toggle"</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Boolean toggle switch
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <CodeBlock>{`const columns = [
+  { key: 'name', dataIndex: 'name', title: 'Name', editable: true },
+  { key: 'age', dataIndex: 'age', title: 'Age', editable: true, editorType: 'number' },
+  {
+    key: 'role', dataIndex: 'role', title: 'Role',
+    editable: true,
+    editorType: 'select',
+    editorOptions: ['Admin', 'Editor', 'Viewer'],
+  },
+  { key: 'active', dataIndex: 'active', title: 'Active', editable: true, editorType: 'toggle' },
+];
+
+<BoltTable
+  columns={columns}
+  data={data}
+  onEdit={(value, record, dataIndex, rowIndex) => {
+    setData(prev => prev.map((row, i) =>
+      i === rowIndex ? { ...row, [dataIndex]: value } : row
+    ));
+  }}
+/>`}</CodeBlock>
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Note:</strong> Columns with a custom{" "}
+                  <code className="text-xs bg-muted px-1 rounded">render</code>{" "}
+                  function skip inline editing — the cell content is fully
+                  controlled by the renderer.
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Status Bar ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">Status Bar</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Show a summary footer below the table with row counts, filtered
+                count, and selection info.
+              </p>
+              <CodeBlock>{`// Default status bar
+<BoltTable columns={columns} data={data} showStatusBar />
+
+// Custom status bar
+<BoltTable
+  columns={columns}
+  data={data}
+  showStatusBar
+  statusBarContent={({ totalRows, filteredRows, selectedRows }) => (
+    <span>{filteredRows} of {totalRows} rows shown, {selectedRows} selected</span>
+  )}
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Toolbar Customization ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Toolbar Customization
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Inject custom content into the toolbar using{" "}
+                <code className="text-xs bg-muted px-1 rounded">
+                  toolbarContent
+                </code>{" "}
+                (between search and column settings) and{" "}
+                <code className="text-xs bg-muted px-1 rounded">
+                  toolbarRight
+                </code>{" "}
+                (after all built-in buttons).
+              </p>
+              <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={data}
+  toolbarContent={<button onClick={handleExport}>Export CSV</button>}
+  toolbarRight={<span>Last updated: 5 min ago</span>}
+  columnSettingsLabel="Toggle Columns"
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── AI Mode ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">AI Mode</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Enable the AI assistant to let users interact with the table
+                using natural language. The AI can filter, sort, style, resize,
+                reorder, pin columns, navigate pages, generate insights, and
+                create chart visualizations.
+              </p>
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Built-in AI</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Pass an{" "}
+                    <code className="text-xs bg-muted px-1 rounded">
+                      aiConfig
+                    </code>{" "}
+                    with your provider and API key.
+                  </p>
+                  <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={data}
+  aiMode
+  aiConfig={{
+    provider: 'openai',
+    apiKey: 'sk-...',
+    model: 'gpt-4o-mini',
+  }}
+/>`}</CodeBlock>
+                </div>
+                <div className="space-y-3 rounded-lg border p-4">
+                  <h3 className="text-sm font-semibold">Custom AI handler</h3>
+                  <p className="text-xs text-muted-foreground">
+                    Bring your own backend with{" "}
+                    <code className="text-xs bg-muted px-1 rounded">
+                      onAIQuery
+                    </code>
+                    .
+                  </p>
+                  <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={data}
+  aiMode
+  onAIQuery={async (query, ctx) => {
+    const res = await fetch('/api/ai', {
+      method: 'POST',
+      body: JSON.stringify({ query }),
+    });
+    return res.json();
+  }}
+/>`}</CodeBlock>
+                </div>
+              </div>
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Saved filters:</strong> When AI answers a query, a
+                  "Save Filter" button appears. Saved operations are stored in
+                  localStorage (using the{" "}
+                  <code className="text-xs bg-muted px-1 rounded">
+                    columnPersistence.storageKey
+                  </code>
+                  ) and can be re-applied instantly with zero AI calls.
+                </p>
+              </div>
+            </div>
+
+            <Separator />
+
+            {/* ── Row Drag & Drop ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Row Drag & Drop
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Enable row reordering with a drag grip handle. A pinned grip
+                column appears on the left. Drag a row and drop it onto another
+                — a blue indicator line shows where it will land.
+              </p>
+              <CodeBlock>{`const [data, setData] = useState(initialData);
+
+<BoltTable
+  columns={columns}
+  data={data}
+  rowKey="id"
+  rowDragEnabled
+  onRowReorder={(fromIndex, toIndex) => {
+    setData(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      return next;
+    });
+  }}
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Column Persistence ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Column Persistence
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Save column state (order, widths, visibility, pinned) to
+                localStorage. On the next page load the table restores the saved
+                state automatically.
+              </p>
+              <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={data}
+  columnPersistence={{
+    storageKey: 'users-table',
+    persistOrder: true,
+    persistWidths: true,
+    persistVisibility: true,
+    persistPinned: true,
+  }}
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Dynamic Row Heights ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Dynamic Row Heights
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                When row content varies in height, enable dynamic measurement.
+                BoltTable uses{" "}
+                <code className="text-xs bg-muted px-1 rounded">
+                  ResizeObserver
+                </code>{" "}
+                to measure each row's actual height.
+              </p>
+              <CodeBlock>{`<BoltTable
+  columns={columns}
+  data={data}
+  enableDynamicRowHeight
+  rowHeight={40}  // minimum / estimated height
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
+            {/* ── Horizontal Virtualization ── */}
+            <div className="space-y-4">
+              <h2 className="text-2xl font-bold tracking-tight">
+                Horizontal Virtualization
+              </h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                For tables with 50+ columns, enable column virtualization. Only
+                columns visible in the viewport (plus one overscan on each side)
+                are rendered. Pinned columns always render.
+              </p>
+              <CodeBlock>{`<BoltTable
+  columns={hundredsOfColumns}
+  data={data}
+  enableColumnVirtualization
+/>`}</CodeBlock>
+            </div>
+
+            <Separator />
+
             {/* ── Server-Side Full Example ── */}
             <div className="space-y-4">
               <h2 className="text-2xl font-bold tracking-tight">
@@ -5888,6 +6962,400 @@ export default function UsersTable() {
                       <td className="px-4 py-2 text-muted-foreground">—</td>
                       <td className="px-4 py-2 text-muted-foreground">
                         Custom empty state content
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">rowClassName</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (record, index) =&gt; string
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        CSS class per row
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">rowStyle</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (record, index) =&gt; CSSProperties
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Inline styles per row
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">disabledFilters</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Remove filter from all context menus
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onCopy</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (text, key, record, index) =&gt; void
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Called after cell value copied
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">
+                        keepPinnedRowsAcrossPages
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Pinned rows stay across pages
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onEdit</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (value, record, dataIndex, index) =&gt; void
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Called after cell edit
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onRowClick</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (record, index, event) =&gt; void
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Called on row click
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">
+                        enableColumnVirtualization
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Only render visible columns
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">
+                        enableDynamicRowHeight
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Measure actual row heights
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">columnPersistence</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        ColumnPersistenceConfig
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Persist column state to localStorage
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">showColumnSettings</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">true</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Show column picker button
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">columnSettingsLabel</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        ReactNode
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        &quot;Columns&quot;
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Column picker button label
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">hideGlobalSearch</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Hide global search
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">globalSearchValue</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        string
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Controlled search value
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onGlobalSearchChange</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (value) =&gt; void
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Search value changed
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">theme</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        {"'auto' | 'dark' | 'light'"}
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        &apos;auto&apos;
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Color scheme hint
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">multiSort</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Enable multi-column sorting
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onMultiSortChange</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (sorts) =&gt; void
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Multi-sort state changed
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">conditionalFormatting</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        ConditionalFormatRule[]
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Declarative cell/row formatting rules
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">rowGrouping</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        RowGroupingConfig
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Group rows by column value
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">treeData</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        TreeDataConfig
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Display hierarchical tree data
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">enableFilterBuilder</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Show advanced filter builder
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">masterDetail</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (record, close) =&gt; ReactNode
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Detail panel on row click
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">toolbarContent</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        ReactNode
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Custom toolbar content (center)
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">toolbarRight</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        ReactNode
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Custom toolbar content (right)
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">enableRowAnimation</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Smooth row transitions
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">showStatusBar</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Show status bar footer
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">statusBarContent</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (info) =&gt; ReactNode
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Custom status bar renderer
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">rowDragEnabled</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Enable row drag reordering
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onRowReorder</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (from, to) =&gt; void
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Row dropped to new position
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">aiMode</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        boolean
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">false</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Enable AI assistant
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">aiConfig</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        BoltTableAIConfig
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        AI provider config
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onAIQuery</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (query, context) =&gt; Promise
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Custom AI handler
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onAIResponse</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (response) =&gt; void
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Called after AI operations
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">aiPlaceholder</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        string
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        &quot;Ask AI anything...&quot;
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        AI search bar placeholder
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">aiButtonLabel</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        ReactNode
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        &quot;Ask AI&quot;
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        AI button label
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onAIInsights</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (data, columns) =&gt; Promise
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Custom AI insights handler
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="px-4 py-2 font-mono">onAIChart</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        (data, columns) =&gt; Promise
+                      </td>
+                      <td className="px-4 py-2 text-muted-foreground">—</td>
+                      <td className="px-4 py-2 text-muted-foreground">
+                        Custom AI chart handler
                       </td>
                     </tr>
                   </tbody>
